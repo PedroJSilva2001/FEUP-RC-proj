@@ -13,6 +13,17 @@
 
 volatile int STOP=FALSE;
 
+void receive(int fd, int res, char* buf) {
+    int i = 0;
+    while (STOP==FALSE) {                       /* loop for input */
+      res = read(fd, &buf[i], 1);               /* returns after 1 chars have been input */
+                                                /* so we can printf... */
+ 
+      if (buf[i]=='\0') STOP=TRUE;
+      i++;
+    }
+}
+
 int main(int argc, char** argv)
 {
     int fd,c, res;
@@ -70,14 +81,7 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    int i = 0;
-    while (STOP==FALSE) {                       /* loop for input */
-      res = read(fd, &buf[i], 1);               /* returns after 1 chars have been input */
-                                                /* so we can printf... */
- 
-      if (buf[i]=='\0') STOP=TRUE;
-      i++;
-    }
+    receive(fd, res, buf);
 
 
 
