@@ -6,6 +6,8 @@ typedef enum {
     EMITTER,
 } user_type_t;
 
+typedef struct termios termios_t; 
+
 int llopen(user_type_t type, char *serial_port);
 
 int llread();

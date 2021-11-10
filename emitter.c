@@ -81,9 +81,10 @@ int main(int argc, char** argv)
   }
 
   int port_fd;
-  
-  if (port_fd = llopen(EMITTER, argv[1]) == -1) {
-    perror("Serial port connection");
+
+  if (port_fd = llopen(EMITTER, argv[1]) ,
+      port_fd == -1) {
+    printf("Serial port connection was not established correctly");
     return 1;
   }
 
@@ -91,22 +92,26 @@ int main(int argc, char** argv)
   uint8_t SET_packet[CTRL_PACKET_SIZE];
 
   create_control_packet(FRAME_CTRL_SET, FRAME_ADDR_EM, SET_packet);
-  printf("hello\n");
-//printf("Message Sent: %x %x %x %x %x \n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
-/*
+  printf("Message Sent: %x %x %x %x %x \n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
+
   int i = 0;
   int n;
-  for (; i < 5 ; i++) {
-    if (n = write(port_fd, &SET_packet[i], 1) < 0) {
+  /*for (; i < 5 ; i++) {
+    if (n = write(port_fd, &SET_packet[i], 1) ,
+        n < 0) {
       perror(argv[1]);
       exit(-3);
     }               
   }*/
-  /*
-  printf("%d bytes written to the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
-
+  if (n = write(port_fd, SET_packet, CTRL_PACKET_SIZE) ,
+      n < 0) {
+    perror(argv[1]);
+    exit(-3);
+  }               
+  
   for (i = 0; i < 5 ; i++) {
-    if (n = read(port_fd, &UA[i], 1) < 0) {
+    if (n = read(port_fd, &UA[i], 1) ,
+        n < 0) {
       perror(argv[1]);
       exit(-4);
     }               
@@ -117,6 +122,6 @@ int main(int argc, char** argv)
     printf("%d bytes read from the serial port\n", sizeof UA / sizeof UA[0]);
     printf("Message echoed back: %x %x %x %x %x\n", UA[0], UA[1], UA[2], UA[3], UA[4]);
   }
-*/
+
   return llclose(port_fd, EMITTER);
 }

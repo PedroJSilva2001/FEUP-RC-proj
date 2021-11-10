@@ -77,8 +77,9 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  
-  if (port_fd = llopen(RECEIVER, argv[1]) == -1) {
+  termios_t oldtio;
+  if (port_fd = llopen(RECEIVER, argv[1]) ,
+      port_fd == -1) {
     perror("Serial port connection");
     return 1;
   }
@@ -93,14 +94,12 @@ int main(int argc, char** argv) {
   int i = 0;
   
   for (; i < 5 ; i++) {
-    if (n = read(port_fd, &SET_packet[i], 1) < 0) {
+    if (n = read(port_fd, &SET_packet[i], 1) , 
+        n < 0) {
       perror(argv[1]);
       exit(-4);
     }               
   }
-printf("Message received: %x %x %x %x %x\n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
-
-  /*
   // If received Message is correct
   if (check_set_msg(&SET_packet) == 0) {
    
@@ -114,9 +113,7 @@ printf("Message received: %x %x %x %x %x\n", SET_packet[0], SET_packet[1], SET_p
       }               
     }
     printf("%d bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
-    
-    
   }
-  */
+  
   return llclose(port_fd, RECEIVER);
 }
