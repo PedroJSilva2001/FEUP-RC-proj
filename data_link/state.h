@@ -12,7 +12,7 @@ typedef enum {
     STOP
 } msg_state_t;
 
-int check_control_packet_byte(uint8_t *ctrl_byte, uint8_t control, uint8_t address, msg_state_t *state);
+void check_control_packet_byte(uint8_t ctrl_byte, uint8_t control, uint8_t address, msg_state_t *state);
 
 
 #endif

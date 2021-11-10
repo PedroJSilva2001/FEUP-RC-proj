@@ -17,7 +17,8 @@
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
-state_t state = START;  /* State Machine */
+#define LLOPEN_ERR 1
+#define LLCLOSE_ERR 3
 
 int main(int argc, char** argv) {
   if ((argc < 2) || 
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
     printf("Serial port connection was not established correctly");
     return 1;
   }
-
+  
   uint8_t UA_packet[CTRL_PACKET_SIZE];
   uint8_t SET_packet[CTRL_PACKET_SIZE];
 
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
       exit(-3);
     }               
   }          
-  
+  /*
   for (i = 0; i < 5 ; i++) {
     if (n = read(port_fd, &UA_packet[i], 1) ,
         n < 0) {
@@ -65,6 +66,8 @@ int main(int argc, char** argv) {
     printf("%ld bytes read from the serial port\n", sizeof UA_packet / sizeof UA_packet[0]);
     printf("Message received: %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3], UA_packet[4]);
   }
-
-  return llclose(port_fd, EMITTER);
+*/
+  if (llclose(port_fd, RECEIVER) < 0) {
+    return LLCLOSE_ERR;
+  }
 }

@@ -16,7 +16,8 @@
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
-state_t state = START;  /* State Machine */
+#define LLOPEN_ERR 1
+#define LLCLOSE_ERR 3
 
 int main(int argc, char** argv) {
   if ( (argc < 2) || 
@@ -31,10 +32,10 @@ int main(int argc, char** argv) {
   int port_fd;
   if (port_fd = llopen(RECEIVER, argv[1]),
       port_fd == -1) {
-    perror("Serial port connection");
-    return 1;
+    perror("Serial port connection not successful");
+    return LLOPEN_ERR;
   }
-  
+  /*
   uint8_t SET_packet[CTRL_PACKET_SIZE];
   uint8_t UA_packet[CTRL_PACKET_SIZE];
 
@@ -49,9 +50,10 @@ int main(int argc, char** argv) {
       perror(argv[1]);
       exit(-4);
     }               
-  }
+  }*/
 
   // If received message is correct
+/*
   if (check_msg(SET_packet, FRAME_ADDR_EM, FRAME_CTRL_SET, &state) == 0) {
    
     printf("%ld bytes read from the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
@@ -64,7 +66,9 @@ int main(int argc, char** argv) {
       }               
     }
     printf("%ld bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
+  }*/
+
+  if (llclose(port_fd, RECEIVER) < 0) {
+    return LLCLOSE_ERR;
   }
-  
-  return llclose(port_fd, RECEIVER);
 }
