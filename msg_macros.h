@@ -11,13 +11,12 @@
 #define FRAME_ADDR_REC   0x01       // Comandos enviados pelo Receptor e Respostas enviadas pelo Emissor
 #define FRAME_BCC1(addr, ctrl)  (addr, ctrl)  
 #define CTRL_PACKET_SIZE 5
-
 typedef enum {
     START,
-    FLAG,
-    A,
-    C,
-    BCC,
+    FLAG_RCV,
+    A_RCV,
+    C_RCV,
+    BCC_OK,
     STOP
     
 } state_t;

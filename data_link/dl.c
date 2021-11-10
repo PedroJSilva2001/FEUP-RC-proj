@@ -10,6 +10,9 @@
 
 static termios_t oldtio;
 
+static int check_receptor_connection(int port_fd);
+static int check_emitter_connection(int port_fd);
+
 int llopen(user_type_t type, char *serial_port) {
   int port_fd;
   
@@ -47,7 +50,7 @@ int llopen(user_type_t type, char *serial_port) {
     case EMITTER:;
     case RECEIVER:;
   }
-  
+
   return port_fd;
 }
 
@@ -61,3 +64,11 @@ int llclose(int port_fd, user_type_t type) {
   close(port_fd);
   return 0;
 }
+/*
+static int check_receptor_connection(int port_fd) {
+
+}
+
+static int check_emitter_connection(int port_fd) {
+
+}*/
