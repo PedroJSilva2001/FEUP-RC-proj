@@ -6,6 +6,9 @@
 #include <termios.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include "msg_macros.h"
 #include "./data_link/packet.h"
 #include "./data_link/dl.h"
@@ -77,8 +80,7 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  termios_t oldtio;
-  if (port_fd = llopen(RECEIVER, argv[1]) ,
+  if (port_fd = llopen(RECEIVER, argv[1]),
       port_fd == -1) {
     perror("Serial port connection");
     return 1;
@@ -88,7 +90,6 @@ int main(int argc, char** argv) {
   uint8_t UA_packet[CTRL_PACKET_SIZE];
 
   create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, UA_packet);
-
 
   int n;
   int i = 0;
@@ -100,10 +101,11 @@ int main(int argc, char** argv) {
       exit(-4);
     }               
   }
-  // If received Message is correct
-  if (check_set_msg(&SET_packet) == 0) {
+
+  // If received message is correct
+  if (check_set_msg(SET_packet) == 0) {
    
-    printf("%d bytes read from the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
+    printf("%ld bytes read from the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
     printf("Message received: %x %x %x %x %x\n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
 
     for (i = 0; i < 5 ; i++) {
@@ -112,7 +114,7 @@ int main(int argc, char** argv) {
         exit(-3);
       }               
     }
-    printf("%d bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
+    printf("%ld bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
   }
   
   return llclose(port_fd, RECEIVER);

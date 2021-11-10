@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "msg_macros.h"
 #include "./data_link/packet.h"
 #include "./data_link/dl.h"
@@ -69,8 +70,7 @@ int check_ua_msg(uint8_t *UA) {
     return 0;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   if ((argc < 2) || 
       ((strcmp("/dev/ttyS0", argv[1])!=0) && 
       (strcmp("/dev/ttyS1", argv[1])!=0)) && 
@@ -81,7 +81,6 @@ int main(int argc, char** argv)
   }
 
   int port_fd;
-
   if (port_fd = llopen(EMITTER, argv[1]) ,
       port_fd == -1) {
     printf("Serial port connection was not established correctly");
@@ -117,10 +116,10 @@ int main(int argc, char** argv)
     }               
   }
 
-  // If received Message is correct
-  if (check_ua_msg(&UA) == 0) {
-    printf("%d bytes read from the serial port\n", sizeof UA / sizeof UA[0]);
-    printf("Message echoed back: %x %x %x %x %x\n", UA[0], UA[1], UA[2], UA[3], UA[4]);
+  // If received message is correct
+  if (check_ua_msg(UA) == 0) {
+    printf("%ld bytes read from the serial port\n", sizeof UA / sizeof UA[0]);
+    printf("Message received: %x %x %x %x %x\n", UA[0], UA[1], UA[2], UA[3], UA[4]);
   }
 
   return llclose(port_fd, EMITTER);

@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include <termios.h>
 
 #define BAUDRATE B38400
@@ -11,10 +12,9 @@ static termios_t oldtio;
 
 int llopen(user_type_t type, char *serial_port) {
   int port_fd;
-  printf("fodasse\n");
   
-  //Open serial port device for reading and writing and not as controlling tty
-  //because we don't want to get killed if linenoise sends CTRL-C.
+  /* Open serial port device for reading and writing and not as controlling tty
+     because we don't want to get killed if linenoise sends CTRL-C. */
   if (port_fd = open(serial_port, O_RDWR | O_NOCTTY), 
       port_fd < 0) {
     perror(serial_port); 
@@ -32,9 +32,9 @@ int llopen(user_type_t type, char *serial_port) {
   newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
   newtio.c_iflag = IGNPAR;
   newtio.c_oflag = 0;
-  newtio.c_lflag = 0;       //set input mode (non-canonical, no echo,...)
-  newtio.c_cc[VTIME] = 0;  //inter-character timer unused
-  newtio.c_cc[VMIN] = 5;   // blocking read until 1 char received 
+  newtio.c_lflag = 0;       // Set input mode (non-canonical, no echo,...)
+  newtio.c_cc[VTIME] = 0;   // Inter-character timer unused
+  newtio.c_cc[VMIN] = 5;    // Blocking read until 1 char received 
 
   tcflush(port_fd, TCIOFLUSH);
 
@@ -44,8 +44,8 @@ int llopen(user_type_t type, char *serial_port) {
   }
 
   switch (type) {
-    case EMITTER:
-    case RECEIVER:
+    case EMITTER:;
+    case RECEIVER:;
   }
   
   return port_fd;
@@ -53,6 +53,7 @@ int llopen(user_type_t type, char *serial_port) {
 
 int llclose(int port_fd, user_type_t type) {
   sleep(2);
+
   if (tcsetattr(port_fd, TCSANOW, &oldtio) < 0) {
     perror("tcsetattr");
     return 1;
