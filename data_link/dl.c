@@ -8,13 +8,11 @@
 
 #include "state.h"
 #include "../msg_macros.h"
+#include "packet.h"
 
 #define BAUDRATE B38400
 
 static termios_t oldtio;
-
-static int check_receptor_connection(int port_fd);
-static int check_emitter_connection(int port_fd);
 
 int llopen(user_type_t type, char *serial_port) {
   int port_fd;
@@ -52,35 +50,39 @@ int llopen(user_type_t type, char *serial_port) {
   switch (type) {
     msg_state_t state = START;
     uint8_t msg_byte = 0;
-    int n;
     
     case EMITTER:
 
-      break;
+    break;
 
     case RECEIVER: {
       while (state != STOP) {
         read(port_fd, &msg_byte, 1);
-        printf("%x\n", msg_byte);
-        printf("%d\n", state);
         check_control_packet_byte(msg_byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
       if (state == STOP) {
+
         uint8_t UA_packet[CTRL_PACKET_SIZE];
 
         create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, UA_packet);
+        
+        int n = write(port_fd, UA_packet, CTRL_PACKET_SIZE);
 
-        printf("Message Received OK\n");
-        for (int i = 0; i < 5 ; i++) {
-          if (n = write(port_fd, &UA_packet[i], 1) < 0) {
-            perror(serial_port);
-            exit(-3);
-          }               
+        if (n < 0) {
+          perror(serial_port);
+          return -1;
         }
+/*
+        if (n < CTRL_PACKET_SIZE) {
+          if (n = write(port_fd, UA_packet, CTRL_PACKET_SIZE - n) , 
+              n < 0) {
+            perror(serial_port);
+            return -1;
+          }
+        }*/
       }
-    }
-      break;
+    } break;
   }
 
   return port_fd;
@@ -96,11 +98,3 @@ int llclose(int port_fd, user_type_t type) {
   close(port_fd);
   return 0;
 }
-/*
-static int check_receptor_connection(int port_fd) {
-
-}
-
-static int check_emitter_connection(int port_fd) {
-
-}*/
