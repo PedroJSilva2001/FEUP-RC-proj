@@ -19,57 +19,6 @@
 
 state_t state = START;  /* State Machine */
 
-int check_ua_msg(uint8_t *UA) {
-    
-    while (state != STOP) {
-    
-        switch (state) {
-            case START:
-                if (UA[0] == FRAME_FLAG)
-                  state = FLAG; 
-                 
-            case FLAG:
-                if (UA[1] == FRAME_ADDR_REC)
-                  state = A;
-                else if (UA[1] == FRAME_FLAG)
-                  continue;
-                else {
-                  state = START; 
-                  return 1;
-                }
-                    
-            case A:
-                if (UA[2] == FRAME_CTRL_UA)
-                  state = BCC;
-                else if (UA[2] == FRAME_FLAG)
-                  state = FLAG;
-                else {
-                  state = START; 
-                  return 1;
-                }
-                    
-            case C:
-                if (UA[3] == UA[1] ^ UA[2])
-                    state = BCC;
-                else if (UA[3] == FRAME_FLAG)
-                  state = FLAG;
-                else {
-                    state = START; 
-                    return 1;
-                }
-                    
-            case BCC:
-                if (UA[4] == FRAME_FLAG)
-                    state = STOP;
-                else {
-                    state = START; 
-                    return 1;
-                } 
-        }
-    }
-    return 0;
-}
-
 int main(int argc, char** argv) {
   if ((argc < 2) || 
       ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -87,7 +36,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  uint8_t UA[CTRL_PACKET_SIZE];
+  uint8_t UA_packet[CTRL_PACKET_SIZE];
   uint8_t SET_packet[CTRL_PACKET_SIZE];
 
   create_control_packet(FRAME_CTRL_SET, FRAME_ADDR_EM, SET_packet);
@@ -95,21 +44,16 @@ int main(int argc, char** argv) {
 
   int i = 0;
   int n;
-  /*for (; i < 5 ; i++) {
+  for (; i < 5 ; i++) {
     if (n = write(port_fd, &SET_packet[i], 1) ,
         n < 0) {
       perror(argv[1]);
       exit(-3);
     }               
-  }*/
-  if (n = write(port_fd, SET_packet, CTRL_PACKET_SIZE) ,
-      n < 0) {
-    perror(argv[1]);
-    exit(-3);
-  }               
+  }          
   
   for (i = 0; i < 5 ; i++) {
-    if (n = read(port_fd, &UA[i], 1) ,
+    if (n = read(port_fd, &UA_packet[i], 1) ,
         n < 0) {
       perror(argv[1]);
       exit(-4);
@@ -117,9 +61,9 @@ int main(int argc, char** argv) {
   }
 
   // If received message is correct
-  if (check_ua_msg(UA) == 0) {
-    printf("%ld bytes read from the serial port\n", sizeof UA / sizeof UA[0]);
-    printf("Message received: %x %x %x %x %x\n", UA[0], UA[1], UA[2], UA[3], UA[4]);
+  if (check_msg(UA_packet, FRAME_ADDR_REC, FRAME_CTRL_UA, &state) == 0) {
+    printf("%ld bytes read from the serial port\n", sizeof UA_packet / sizeof UA_packet[0]);
+    printf("Message received: %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3], UA_packet[4]);
   }
 
   return llclose(port_fd, EMITTER);

@@ -18,57 +18,6 @@
 
 state_t state = START;  /* State Machine */
 
-int check_set_msg(uint8_t *SET) {
-    
-    while (state != STOP) {
-    
-        switch (state) {
-            case START:
-                if (SET[0] == FRAME_FLAG)
-                    state = FLAG; 
-                
-            case FLAG:
-                if (SET[1] == FRAME_ADDR_EM)
-                    state = A;
-                else if (SET[1] == FRAME_FLAG)
-                  state = FLAG;
-                else {
-                    state = START; 
-                    return 1;
-                }
-                    
-            case A:
-                if (SET[2] == FRAME_CTRL_SET)
-                    state = BCC;
-                else if (SET[2] == FRAME_FLAG)
-                  state = FLAG;
-                else {
-                    state = START; 
-                    return 1;
-                }
-                    
-            case C:
-                if (SET[3] == SET[1] ^ SET[2])
-                    state = BCC;
-                else if (SET[3] == FRAME_FLAG)
-                  state = FLAG;
-                else {
-                    state = START; 
-                    return 1;
-                }
-                    
-            case BCC:
-                if (SET[4] == FRAME_FLAG)
-                    state = STOP;
-                else {
-                    state = START; 
-                    return 1;
-                } 
-        }
-    }
-    return 0;
-}
-
 int main(int argc, char** argv) {
   if ( (argc < 2) || 
         ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -103,7 +52,7 @@ int main(int argc, char** argv) {
   }
 
   // If received message is correct
-  if (check_set_msg(SET_packet) == 0) {
+  if (check_msg(SET_packet, FRAME_ADDR_EM, FRAME_CTRL_SET, &state) == 0) {
    
     printf("%ld bytes read from the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
     printf("Message received: %x %x %x %x %x\n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
