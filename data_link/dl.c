@@ -6,6 +6,7 @@
 #include <string.h>
 #include <termios.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include "state.h"
 #include "../msg_macros.h"
@@ -13,12 +14,23 @@
 
 #define BAUDRATE B38400
 
-void atende();
-
 static termios_t oldtio;
+msg_state_t state = START;
 
-int flag=1, tries=1;
-int ua_received = 0;
+int MAX_NR_TRIES = 4;
+bool failed_to_read = true;
+
+void signal_handler() {                  
+
+	if (state != STOP) {
+    failed_to_read = true;
+    printf("UA *NOT* received in time\n");
+    return;
+  }
+
+  printf("UA received in time\n");
+}
+
 int llopen(user_type_t type, char *serial_port) {
   int port_fd;
   
@@ -52,28 +64,40 @@ int llopen(user_type_t type, char *serial_port) {
     return -1;
   }
 
+  uint8_t msg_byte = 0;
+
   switch (type) {
-    msg_state_t state = START;
-    uint8_t msg_byte = 0;
-    
+      
     case EMITTER: {
-        /*uint8_t SET_packet[CTRL_PACKET_SIZE];
+        int tries = 0;
+        uint8_t SET_packet[CTRL_PACKET_SIZE];
         uint8_t UA_packet[CTRL_PACKET_SIZE];
 
         create_control_packet(FRAME_CTRL_SET, FRAME_ADDR_EM, SET_packet);
 
-        (void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
+        (void) signal(SIGALRM, signal_handler); 
 
-        while (tries < 4 && flag) {
-          
-          if(flag){
-            int n = write(port_fd, SET_packet, CTRL_PACKET_SIZE);
-            ua_received = read(port_fd, UA_packet, CTRL_PACKET_SIZE);
-            alarm(3);                 // activa alarme de 3s
-            
+        do {
+          tries++;
+          printf("nr try: %d\n", tries);
+          int n = write(port_fd, SET_packet, CTRL_PACKET_SIZE);
+
+          alarm(3);
+          failed_to_read = true;
+          state = START;
+
+          while (state != STOP && failed_to_read) {
+            read(port_fd, &msg_byte, 1);
+            printf("e: read %x\n", msg_byte);
+            check_control_packet_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
           }
 
-        }*/
+          if (state == STOP) {
+            failed_to_read = false;
+            printf("UA received on time\n");
+          }
+
+        } while (tries < MAX_NR_TRIES && failed_to_read);
     }
 
     break;
@@ -81,17 +105,18 @@ int llopen(user_type_t type, char *serial_port) {
     case RECEIVER: {
       while (state != STOP) {
         read(port_fd, &msg_byte, 1);
-        printf("read %x\n", msg_byte);
+        printf("r: read %x\n", msg_byte);
         check_control_packet_byte(msg_byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
       if (state == STOP) {
 
         uint8_t UA_packet[CTRL_PACKET_SIZE];
-
         create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, UA_packet);
         
         int n = write(port_fd, UA_packet, CTRL_PACKET_SIZE);
+
+        printf("r(SENT) ua: write %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3] , UA_packet[4]);
 
         if (n < 0) {
           perror(serial_port);
@@ -121,17 +146,4 @@ int llclose(int port_fd, user_type_t type) {
   }
   close(port_fd);
   return 0;
-}
-
-void atende()                   // atende alarme
-{
-	printf("alarme # %d\n", tries);
-
-  if (ua_received == CTRL_PACKET_SIZE) {
-    flag = 0;
-    tries = 1;
-    return;
-  }
-	flag = 1;  //se for 0 => recebeu UA
-	tries++;
 }
