@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     printf("Serial port connection was not established correctly");
     return 1;
   }
-  
+  /*
   uint8_t UA_packet[CTRL_PACKET_SIZE];
   uint8_t SET_packet[CTRL_PACKET_SIZE];
 
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
       perror(argv[1]);
       exit(-3);
     }               
-  }          
+  }  */        
   /*
   for (i = 0; i < 5 ; i++) {
     if (n = read(port_fd, &UA_packet[i], 1) ,
