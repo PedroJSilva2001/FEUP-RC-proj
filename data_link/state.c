@@ -11,7 +11,7 @@ void check_control_packet_byte(uint8_t byte, uint8_t control, uint8_t address, m
       } break;
 
     case FLAG_RCV:
-      if (byte == FRAME_ADDR_EM)  {
+      if (byte == address)  {
         *state = A_RCV;
       } else if (byte == FRAME_FLAG) {
         *state = FLAG_RCV;
@@ -20,7 +20,7 @@ void check_control_packet_byte(uint8_t byte, uint8_t control, uint8_t address, m
       } break;
 
     case A_RCV:
-      if (byte == FRAME_CTRL_SET) {
+      if (byte == control) {
         *state = C_RCV;
       } else if (byte == FRAME_FLAG) {
         *state = FLAG_RCV;
@@ -29,7 +29,7 @@ void check_control_packet_byte(uint8_t byte, uint8_t control, uint8_t address, m
       } break;
 
     case C_RCV:
-      if (byte == control ^ address) {
+      if (byte == address ^ control) {
         *state = BCC_OK;
       } else if (byte == FRAME_FLAG) {
         *state = FLAG_RCV;
