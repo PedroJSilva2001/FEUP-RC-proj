@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  if (port_fd = llopen(RECEIVER, argv[1]),
+  if (port_fd = llopen(argv[1], RECEIVER),
       port_fd == -1) {
     perror("Serial port connection not successful");
     return LLOPEN_ERR;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     printf("%ld bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
   }*/
 
-  if (llclose(RECEIVER, port_fd) < 0) {
+  if (llclose(port_fd, RECEIVER) < 0) {
     return LLCLOSE_ERR;
   }
 }

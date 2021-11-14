@@ -10,7 +10,7 @@ typedef struct termios termios_t;
 
 int llopen(char *serial_port, user_type_t type);
 
-int llwrite(int fd, char *buffer, int length):
+int llwrite(int fd, char *buffer, int length);
 
 int llread(int fd, char *buffer);
 

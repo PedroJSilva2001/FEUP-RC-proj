@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  if (port_fd = llopen(EMITTER, argv[1]) ,
+  if (port_fd = llopen(argv[1], EMITTER) ,
       port_fd == -1) {
     printf("Serial port connection was not established correctly");
     return 1;
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     printf("Message received: %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3], UA_packet[4]);
   }
 */
-  if (llclose(RECEIVER, port_fd) < 0) {
+  if (llclose(port_fd, RECEIVER) < 0) {
     return LLCLOSE_ERR;
   }
 }

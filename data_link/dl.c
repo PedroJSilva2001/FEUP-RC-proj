@@ -24,11 +24,11 @@ void signal_handler() {
 
 	if (state != STOP) {
     failed_to_read = true;
-    printf("UA *NOT* received in time\n");
+    printf("*NOT* received in time\n");
     return;
   }
 
-  printf("UA received in time\n");
+  printf("Received in time\n");
 }
 
 int llopen(char *serial_port, user_type_t type) {
@@ -149,17 +149,62 @@ int llopen(char *serial_port, user_type_t type) {
 
 
 int llwrite(int fd, char *buffer, int length) {
-    uint8_t *info_packet;
+
+  uint8_t *info_packet;
+  uint8_t *rr_packet;
+  int tries = 0;
+  int n;
+  state = START;
+
+  create_information_packet(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_packet);
+
+  (void) signal(SIGALRM, signal_handler); 
+
+  do {
+    tries++;
+    printf("nr try: %d\n", tries);
+    n = write(fd, info_packet, INFO_PACKET_MIN_SIZE + length); 
+
+    if (n < 0) {
+      perror("write error");
+      return -1;
+    }
     
-    create_information_packet(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_packet);
+    alarm(3);
+    failed_to_read = true;
+    state = START;
 
+    while (state != STOP && failed_to_read) {
+      read(fd, &rr_packet, 1);
+      // TODO: Check RR packet
+      // TODO: Update state
+    }
 
+    if (state == STOP) {
+      failed_to_read = false;
+      printf("RR received on time\n");
+    }
+
+  } while (tries < MAX_NR_TRIES && failed_to_read);
+
+  return n;
 }
 
 
 int llread(int fd, char *buffer) {
+  state = START;
+  uint8_t i_byte;
+
+  while (state != STOP) {
+    read(fd, &i_byte, 1);
+    // TODO: Check I packet
+    // TODO: Update state
 
 
+
+  }
+
+   // TODO: CONTINUE
 
 
 
