@@ -5,7 +5,7 @@
 #define FRAME_CTRL_SET   0x03
 #define FRAME_CTRL_DISC
 #define FRAME_CTRL_UA    0x07
-#define FRAME_CTRL_RR
+#define FRAME_CTRL_RR(r) (r==0 ? 0x05 : 0x85)  
 #define FRAME_CTRL_REJ
 #define FRAME_ADDR_EM    0x03       // Comandos enviados pelo Emissor e Respostas enviadas pelo Receptor
 #define FRAME_ADDR_REC   0x01       // Comandos enviados pelo Receptor e Respostas enviadas pelo Emissor

@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     printf("%ld bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
   }*/
 
-  if (llclose(port_fd, RECEIVER) < 0) {
+  if (llclose(RECEIVER, port_fd) < 0) {
     return LLCLOSE_ERR;
   }
 }

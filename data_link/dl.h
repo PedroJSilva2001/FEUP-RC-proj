@@ -8,11 +8,11 @@ typedef enum {
 
 typedef struct termios termios_t; 
 
-int llopen(user_type_t type, char *serial_port);
+int llopen(char *serial_port, user_type_t type);
 
-int llread();
+int llwrite(int fd, char *buffer, int length):
 
-int llwrite();
+int llread(int fd, char *buffer);
 
 int llclose(int port_fd, user_type_t type);
 

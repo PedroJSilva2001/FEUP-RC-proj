@@ -31,7 +31,7 @@ void signal_handler() {
   printf("UA received in time\n");
 }
 
-int llopen(user_type_t type, char *serial_port) {
+int llopen(char *serial_port, user_type_t type) {
   int port_fd;
   
   /* Open serial port device for reading and writing and not as controlling tty
@@ -122,6 +122,16 @@ int llopen(user_type_t type, char *serial_port) {
           perror(serial_port);
           return -1;
         }
+        
+        
+        // TODO: 
+        // O RECEIVER ESTÁ NO ESTADO DISC, RECEBE SET E ENVIA UA E VAI PARA O ESTADO RECEIVE_DATA
+        // DEPOIS: PODE RECEBER 2 COISAS: O SET OU TRAMA INFORMAÇÃO
+        // SE RECEBER O SET, ENVIA DE NOVO O UA
+      
+              
+        
+        
 /*
         if (n < CTRL_PACKET_SIZE) {
           if (n = write(port_fd, UA_packet, CTRL_PACKET_SIZE - n) , 
@@ -136,6 +146,27 @@ int llopen(user_type_t type, char *serial_port) {
 
   return port_fd;
 }
+
+
+int llwrite(int fd, char *buffer, int length) {
+    uint8_t *info_packet;
+    
+    create_information_packet(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_packet);
+
+
+}
+
+
+int llread(int fd, char *buffer) {
+
+
+
+
+
+
+}
+
+
 
 int llclose(int port_fd, user_type_t type) {
   sleep(2);

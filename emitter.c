@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     printf("Message received: %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3], UA_packet[4]);
   }
 */
-  if (llclose(port_fd, RECEIVER) < 0) {
+  if (llclose(RECEIVER, port_fd) < 0) {
     return LLCLOSE_ERR;
   }
 }
