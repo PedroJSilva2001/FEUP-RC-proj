@@ -3,7 +3,7 @@
 
 #define FRAME_FLAG       0x7E
 #define FRAME_CTRL_SET   0x03
-#define FRAME_CTRL_DISC
+#define FRAME_CTRL_DISC  0x0B
 #define FRAME_CTRL_UA    0x07
 #define FRAME_CTRL_RR(r) (r==0 ? 0x05 : 0x85)  
 #define FRAME_CTRL_REJ(r) (r==0 ? 0x01 : 0x81) 
