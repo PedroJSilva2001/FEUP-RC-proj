@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+/**
+ * State machine for the control frame.
+ */
 typedef enum {
     START,
     FLAG_RCV,
@@ -12,7 +15,12 @@ typedef enum {
     STOP
 } msg_state_t;
 
+/** @brief Checks received control byte and updates the state machine.
+ *  @param ctrl_byte Byte to check.
+ *  @param control Control byte.
+ *  @param address Address byte.
+ *  @param state Current state of the state machine.
+ */
 void check_control_packet_byte(uint8_t ctrl_byte, uint8_t control, uint8_t address, msg_state_t *state);
-
 
 #endif
