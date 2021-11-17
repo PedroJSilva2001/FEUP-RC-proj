@@ -64,8 +64,8 @@ int llopen(char *serial_port, user_type type) {
     return -1;
   }
 
-  uint8_t msg_byte = 0;
-  uint8_t packet[CTRL_PACKET_SIZE];
+  char msg_byte = 0;
+  char packet[CTRL_PACKET_SIZE];
 
   switch (type) {
       
@@ -149,8 +149,8 @@ int llopen(char *serial_port, user_type type) {
 
 int llwrite(int fd, char *buffer, int length) {
 
-  uint8_t *info_packet;
-  uint8_t *rr_packet;
+  char *info_packet;
+  char *rr_packet;
   int tries = 0;
   int n;
   state = START;
@@ -192,7 +192,7 @@ int llwrite(int fd, char *buffer, int length) {
 
 int llread(int fd, char *buffer) {
   state = START;
-  uint8_t i_byte;
+  char i_byte;
 
   while (state != STOP) {
     read(fd, &i_byte, 1);
@@ -213,8 +213,8 @@ int llread(int fd, char *buffer) {
 
 
 int llclose(int port_fd, user_type type) {
-  uint8_t msg_byte = 0;
-  uint8_t packet[CTRL_PACKET_SIZE];
+  char msg_byte = 0;
+  char packet[CTRL_PACKET_SIZE];
   failed_to_read = true;
 
   switch (type) {

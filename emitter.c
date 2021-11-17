@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
   }
   
   /*
-  uint8_t UA_packet[CTRL_PACKET_SIZE];
-  uint8_t SET_packet[CTRL_PACKET_SIZE];
+  char UA_packet[CTRL_PACKET_SIZE];
+  char SET_packet[CTRL_PACKET_SIZE];
 
   create_control_packet(FRAME_CTRL_SET, FRAME_ADDR_EM, SET_packet);
   printf("Message Sent: %x %x %x %x %x \n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);

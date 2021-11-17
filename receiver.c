@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
   }
   
   /*
-  uint8_t SET_packet[CTRL_PACKET_SIZE];
-  uint8_t UA_packet[CTRL_PACKET_SIZE];
+  char SET_packet[CTRL_PACKET_SIZE];
+  char UA_packet[CTRL_PACKET_SIZE];
 
   create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, UA_packet);
 

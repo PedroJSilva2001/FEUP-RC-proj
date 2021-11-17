@@ -1,7 +1,7 @@
 #include "packet.h"
 #include "../msg_macros.h"
 
-void create_control_packet(uint8_t control, uint8_t address, uint8_t *ctrl_packet) {
+void create_control_packet(char control, char address, char *ctrl_packet) {
   ctrl_packet[0] = FRAME_FLAG;
   ctrl_packet[1] = address;
   ctrl_packet[2] = control;
@@ -9,9 +9,9 @@ void create_control_packet(uint8_t control, uint8_t address, uint8_t *ctrl_packe
   ctrl_packet[4] = FRAME_FLAG;
 }
 
-void create_information_packet(uint8_t control, uint8_t address, uint8_t *data, int data_length, uint8_t *info_packet) {
+void create_information_packet(char control, char address, char *data, int data_length, char *info_packet) {
 
-  uint8_t *inf = (uint8_t *) malloc(sizeof(uint8_t) *(INFO_PACKET_MIN_SIZE + data_length)); // TODO: REVER
+  char *inf = (char *) malloc(sizeof(char) *(INFO_PACKET_MIN_SIZE + data_length)); // TODO: REVER
   inf[0] = FRAME_FLAG;
   inf[1] = address;
   inf[2] = control;
@@ -30,7 +30,7 @@ void create_information_packet(uint8_t control, uint8_t address, uint8_t *data, 
 }
 
 
-void stuffing(uint8_t *info_packet, uint8_t *stuffed_info_packet, unsigned int length) {
+void stuffing(char *info_packet, char *stuffed_info_packet, unsigned int length) {
   // TODO: REVER
   unsigned int index = 1;
 
