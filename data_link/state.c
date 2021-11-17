@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-void check_control_packet_byte(uint8_t byte, uint8_t control, uint8_t address, msg_state_t *state) {
+void check_control_packet_byte(uint8_t byte, uint8_t control, uint8_t address, msg_state *state) {
   switch (*state) {
     case START:
       if (byte == FRAME_FLAG) {

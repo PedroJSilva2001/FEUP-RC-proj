@@ -7,16 +7,16 @@
 typedef enum {
     RECEIVER,
     EMITTER,
-} user_type_t;
+} user_type;
 
-typedef struct termios termios_t; 
+typedef struct termios termios; 
 
-int llopen(char *serial_port, user_type_t type);
+int llopen(char *serial_port, user_type type);
 
 int llwrite(int fd, char *buffer, int length);
 
 int llread(int fd, char *buffer);
 
-int llclose(int port_fd, user_type_t type);
+int llclose(int port_fd, user_type type);
 
 #endif

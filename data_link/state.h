@@ -13,7 +13,7 @@ typedef enum {
     C_RCV,
     BCC_OK,
     STOP
-} msg_state_t;
+} msg_state;
 
 /** @brief Checks received control byte and updates the state machine.
  *  @param ctrl_byte Byte to check.
@@ -21,6 +21,6 @@ typedef enum {
  *  @param address Address byte.
  *  @param state Current state of the state machine.
  */
-void check_control_packet_byte(uint8_t ctrl_byte, uint8_t control, uint8_t address, msg_state_t *state);
+void check_control_packet_byte(uint8_t ctrl_byte, uint8_t control, uint8_t address, msg_state *state);
 
 #endif

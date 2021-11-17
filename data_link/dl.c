@@ -14,8 +14,8 @@
 
 #define BAUDRATE B38400
 
-static termios_t oldtio;
-msg_state_t state = START;
+static termios oldtio;
+msg_state state = START;
 
 int MAX_NR_TRIES = 4;
 bool failed_to_read = true;
@@ -31,7 +31,7 @@ void signal_handler() {
   printf("Received in time\n");
 }
 
-int llopen(char *serial_port, user_type_t type) {
+int llopen(char *serial_port, user_type type) {
   int port_fd;
   
   /* Open serial port device for reading and writing and not as controlling tty
@@ -212,7 +212,7 @@ int llread(int fd, char *buffer) {
 
 
 
-int llclose(int port_fd, user_type_t type) {
+int llclose(int port_fd, user_type type) {
   uint8_t msg_byte = 0;
   uint8_t packet[CTRL_PACKET_SIZE];
   failed_to_read = true;
