@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
     printf("Serial port connection was not established correctly");
     return 1;
   }
+  
   /*
   uint8_t UA_packet[CTRL_PACKET_SIZE];
   uint8_t SET_packet[CTRL_PACKET_SIZE];
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
     printf("Message received: %x %x %x %x %x\n", UA_packet[0], UA_packet[1], UA_packet[2], UA_packet[3], UA_packet[4]);
   }
 */
-  if (llclose(port_fd, RECEIVER) < 0) {
+  if (llclose(port_fd, EMITTER) < 0) {
     return LLCLOSE_ERR;
   }
 }

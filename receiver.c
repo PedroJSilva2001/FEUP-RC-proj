@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
     perror("Serial port connection not successful");
     return LLOPEN_ERR;
   }
+  
   /*
   uint8_t SET_packet[CTRL_PACKET_SIZE];
   uint8_t UA_packet[CTRL_PACKET_SIZE];
