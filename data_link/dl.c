@@ -10,7 +10,7 @@
 
 #include "state.h"
 #include "../msg_macros.h"
-#include "packet.h"
+#include "frame.h"
 
 #define BAUDRATE B38400
 
@@ -65,20 +65,20 @@ int llopen(char *serial_port, user_type type) {
   }
 
   char msg_byte = 0;
-  char packet[CTRL_PACKET_SIZE];
+  char frame[CTRL_FRAME_SIZE];
 
   switch (type) {
       
     case EMITTER: {
         int tries = 0;
-        create_control_packet(FRAME_CTRL_SET, FRAME_ADDR_EM, packet);
+        create_control_frame(FRAME_CTRL_SET, FRAME_ADDR_EM, frame);
         signal(SIGALRM, signal_handler); 
 
         do {
           tries++;
           printf("nr try: %d\n", tries);
           // WRITE SET
-          int n = write(port_fd, packet, CTRL_PACKET_SIZE);
+          int n = write(port_fd, frame, CTRL_FRAME_SIZE);
 
           alarm(3);
           failed_to_read = true;
@@ -88,7 +88,7 @@ int llopen(char *serial_port, user_type type) {
           while (state != STOP && failed_to_read) {
             read(port_fd, &msg_byte, 1);
             printf("e: read %x\n", msg_byte);
-            check_control_packet_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
+            check_control_frame_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
           }
 
           if (state == STOP) {
@@ -106,16 +106,16 @@ int llopen(char *serial_port, user_type type) {
       while (state != STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
-        check_control_packet_byte(msg_byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
+        check_control_frame_byte(msg_byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
       // WRITE UA
       if (state == STOP) {
 
-        create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, packet);
-        int n = write(port_fd, packet, CTRL_PACKET_SIZE);
+        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, frame);
+        int n = write(port_fd, frame, CTRL_FRAME_SIZE);
 
-        printf("r(SENT) ua: write %x %x %x %x %x\n", packet[0], packet[1], packet[2], packet[3] , packet[4]);
+        printf("r(SENT) ua: write %x %x %x %x %x\n", frame[0], frame[1], frame[2], frame[3] , frame[4]);
 
         if (n < 0) {
           perror(serial_port);
@@ -132,8 +132,8 @@ int llopen(char *serial_port, user_type type) {
         
         
 /*
-        if (n < CTRL_PACKET_SIZE) {
-          if (n = write(port_fd, UA_packet, CTRL_PACKET_SIZE - n) , 
+        if (n < CTRL_FRAME_SIZE) {
+          if (n = write(port_fd, UA_FRAME, CTRL_FRAME_SIZE - n) , 
               n < 0) {
             perror(serial_port);
             return -1;
@@ -149,20 +149,20 @@ int llopen(char *serial_port, user_type type) {
 
 int llwrite(int fd, char *buffer, int length) {
 
-  char *info_packet;
-  char *rr_packet;
+  char *info_frame;
+  char *rr_frame;
   int tries = 0;
   int n;
   state = START;
 
-  create_information_packet(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_packet);
+  create_information_frame(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_frame);
 
   (void) signal(SIGALRM, signal_handler); 
 
   do {
     tries++;
     printf("nr try: %d\n", tries);
-    n = write(fd, info_packet, INFO_PACKET_MIN_SIZE + length); 
+    n = write(fd, info_frame, /*TODO : INFO_FRAME_MIN_SIZE +*/ length); 
 
     if (n < 0) {
       perror("write error");
@@ -174,8 +174,8 @@ int llwrite(int fd, char *buffer, int length) {
     state = START;
 
     while (state != STOP && failed_to_read) {
-      read(fd, &rr_packet, 1);
-      // TODO: Check RR packet
+      read(fd, &rr_frame, 1);
+      // TODO: Check RR frame
       // TODO: Update state
     }
 
@@ -196,7 +196,7 @@ int llread(int fd, char *buffer) {
 
   while (state != STOP) {
     read(fd, &i_byte, 1);
-    // TODO: Check I packet
+    // TODO: Check I frame
     // TODO: Update state
 
 
@@ -214,14 +214,14 @@ int llread(int fd, char *buffer) {
 
 int llclose(int port_fd, user_type type) {
   char msg_byte = 0;
-  char packet[CTRL_PACKET_SIZE];
+  char frame[CTRL_FRAME_SIZE];
   failed_to_read = true;
 
   switch (type) {
       
     case EMITTER: {
         int tries = 0;
-        create_control_packet(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet);
+        create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, frame);
         signal(SIGALRM, signal_handler); 
 
         do {
@@ -229,7 +229,7 @@ int llclose(int port_fd, user_type type) {
           printf("nr try: %d\n", tries);
 
           // WRITE DISC
-          int n = write(port_fd, packet, CTRL_PACKET_SIZE);
+          int n = write(port_fd, frame, CTRL_FRAME_SIZE);
           printf("Termination of connection\n");
 
           alarm(3);
@@ -240,7 +240,7 @@ int llclose(int port_fd, user_type type) {
           while (state != STOP && failed_to_read) {
             read(port_fd, &msg_byte, 1);
             printf("e: read %x\n", msg_byte);
-            check_control_packet_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
+            check_control_frame_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
           }
 
           if (state == STOP) {
@@ -256,8 +256,8 @@ int llclose(int port_fd, user_type type) {
         }
 
         // WRITE UA
-        create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_EM, packet);
-        write(port_fd, packet, CTRL_PACKET_SIZE);
+        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
+        write(port_fd, frame, CTRL_FRAME_SIZE);
         printf("Disconnected\n");
     }
 
@@ -268,7 +268,7 @@ int llclose(int port_fd, user_type type) {
       while (state != STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
-        check_control_packet_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
+        check_control_frame_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
       if (state != STOP) {
@@ -277,8 +277,8 @@ int llclose(int port_fd, user_type type) {
       }
 
       // WRITE DISC
-      create_control_packet(FRAME_CTRL_DISC, FRAME_ADDR_REC, packet);
-      int n = write(port_fd, packet, CTRL_PACKET_SIZE);
+      create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_REC, frame);
+      int n = write(port_fd, frame, CTRL_FRAME_SIZE);
 
       if (n < 0) {
         perror("fd");
@@ -291,7 +291,7 @@ int llclose(int port_fd, user_type type) {
       while (state != STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
-        check_control_packet_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
+        check_control_frame_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
       }
 
       if (state != STOP) {

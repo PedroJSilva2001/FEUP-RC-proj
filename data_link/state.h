@@ -21,6 +21,6 @@ typedef enum {
  *  @param address Address byte.
  *  @param state Current state of the state machine.
  */
-void check_control_packet_byte(char ctrl_byte, char control, char address, msg_state *state);
+void check_control_frame_byte(char ctrl_byte, char control, char address, msg_state *state);
 
 #endif
