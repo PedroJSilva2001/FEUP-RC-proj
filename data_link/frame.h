@@ -31,10 +31,7 @@ void create_control_frame(char control, char address, char *ctrl_frame);
  */
 unsigned int create_information_frame(char control, char address, char *data, unsigned int data_length, char *info_frame);
 
-/** @brief Creates a new array of the frame using the byte stuffing tecnique.
- *  @param info_frame Information frame.
- *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
- *  @param length Size of the array info_frame.
- */
+
+char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length);
 
 #endif

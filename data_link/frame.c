@@ -35,6 +35,11 @@ unsigned int create_information_frame(char control, char address, char *data_pac
   return size;
 }
 
+/** @brief Creates a new array of the frame using the byte stuffing tecnique.
+ *  @param info_frame Information frame.
+ *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
+ *  @param length Size of the array info_frame.
+ */
 static unsigned int stuff_bytes(char *base, char *info_frame, unsigned int base_size) {
   unsigned int index = 1;
   char byte;
@@ -63,6 +68,30 @@ static unsigned int stuff_bytes(char *base, char *info_frame, unsigned int base_
   return size;
 }
 
+
+char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length) {
+  char *destuffed_frame = (char *) malloc(sizeof (char) * length);
+  unsigned int index = 1;
+
+  *real_length = length;
+  destuffed_frame[0] = FRAME_FLAG;
+
+  for (unsigned int i = 1; i < length-1; i++) {
+    if (stuffed_info_frame[i] == FRAME_ESCAPE) {
+      destuffed_frame = realloc(destuffed_frame, --(*real_length));
+      destuffed_frame[index] = BYTE_TRANSPARENCY(stuffed_info_frame[i+1]);
+      i++;
+    } else {
+      destuffed_frame[index] = stuffed_info_frame[i];
+    }
+    index++;
+  }
+
+  destuffed_frame[*real_length-1] = FRAME_FLAG;
+
+  return destuffed_frame;
+}
+
 static char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
   char BCC2 = data_packet[0];
   for (unsigned int i = 1; i < data_packet_size; i++) {
@@ -70,8 +99,8 @@ static char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
   }
   return BCC2;
 }
-/*
-int main() {
+
+/*int main() {
   char packet[3] = {0x3, FRAME_FLAG, 0x2};
   char *info_frame = (char *) malloc(sizeof (char) * 9);;
   unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 3, info_frame);
@@ -80,10 +109,18 @@ int main() {
  char packet[4] = {0x3, FRAME_ESCAPE, FRAME_FLAG, 0x2};
   char *info_frame = (char *) malloc(sizeof (char) * 10);
   unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 4, info_frame);
-  printf("size = %d\n", size);
+    printf("size = %d\n", size);
   for (size_t i = 0; i < size; i++)
   {
     printf("byte = %x \n", info_frame[i]);
+  }
+  
+  unsigned int s2;
+  char *dest = destuff_bytes(info_frame, 12, &s2);
+  printf("size2 = %d\n", s2);
+  for (size_t i = 0; i < s2; i++)
+  {
+    printf("byte = %x \n", dest[i]);
   }
   
   // flag A C bcc1 data bcc2 flag
