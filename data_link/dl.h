@@ -11,7 +11,7 @@ typedef enum {
 
 typedef struct termios termios; 
 
-int llopen(char *serial_port, user_type type);
+int llopen(int com, user_type type);
 
 int llwrite(int fd, char *buffer, int length);
 
