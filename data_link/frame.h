@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include "../msg_macros.h"
 
+#define INFO_FRAME_MIN_SIZE 6
+
 /** @brief Creates control frame (S and U).
  *  @param control Control byte.
  *  @param address Address byte.

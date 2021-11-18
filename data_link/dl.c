@@ -163,7 +163,7 @@ int llwrite(int fd, char *buffer, int length) {
   do {
     tries++;
     printf("nr try: %d\n", tries);
-    n = write(fd, info_frame, /*TODO : INFO_FRAME_MIN_SIZE +*/ length); 
+    n = write(fd, info_frame, INFO_FRAME_MIN_SIZE + length); 
 
     if (n < 0) {
       perror("write error");

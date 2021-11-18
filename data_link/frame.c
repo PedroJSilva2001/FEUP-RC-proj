@@ -1,8 +1,6 @@
 #include "frame.h"
 #include "../msg_macros.h"
 
-#define INFO_MSG_MIN_SIZE 6
-
 void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
   ctrl_frame[1] = address;
@@ -13,7 +11,7 @@ void create_control_frame(char control, char address, char *ctrl_frame) {
 
 void create_information_frame(char control, char address, char *data, int data_length, char *info_frame) {
 
-  char *inf = (char *) malloc(sizeof(char) *(INFO_MSG_MIN_SIZE + data_length)); // TODO: REVER
+  char *inf = (char *) malloc(sizeof(char) *(INFO_FRAME_MIN_SIZE + data_length)); // TODO: REVER
   inf[0] = FRAME_FLAG;
   inf[1] = address;
   inf[2] = control;
@@ -28,7 +26,7 @@ void create_information_frame(char control, char address, char *data, int data_l
   //inf[4 + data_length] = BBC2
   inf[5 + data_length] = FRAME_FLAG;
 
-  stuffing(inf, info_frame, INFO_MSG_MIN_SIZE + data_length);
+  stuffing(inf, info_frame, INFO_FRAME_MIN_SIZE + data_length);
 }
 
 
