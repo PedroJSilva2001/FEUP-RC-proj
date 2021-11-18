@@ -1,8 +1,6 @@
 #ifndef DATA_LINK_STATE_H
 #define DATA_LINK_STATE_H
 
-#include <stdint.h>
-
 /**
  * State machine for the control frame.
  */

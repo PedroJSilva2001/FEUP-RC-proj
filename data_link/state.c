@@ -1,7 +1,5 @@
 #include "state.h"
-#include "../msg_macros.h"
-
-#include <stdio.h>
+#include "frame.h"
 
 void check_control_frame_byte(char byte, char control, char address, msg_state *state) {
   switch (*state) {
