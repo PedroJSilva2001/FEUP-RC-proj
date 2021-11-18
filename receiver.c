@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "msg_macros.h"
-#include "./data_link/packet.h"
+#include "./data_link/frame.h"
 #include "./data_link/dl.h"
 
 #define BAUDRATE B38400

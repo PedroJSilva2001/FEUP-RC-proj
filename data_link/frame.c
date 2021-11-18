@@ -1,4 +1,4 @@
-#include "packet.h"
+#include "frame.h"
 #include "../msg_macros.h"
 
 #define INFO_MSG_MIN_SIZE 6
