@@ -31,9 +31,10 @@ void signal_handler() {
   printf("Received in time\n");
 }
 
-int llopen(char *serial_port, user_type type) {
+int llopen(int com, user_type type) {
   int port_fd;
-  
+  char serial_port[255];
+  sprintf(serial_port, "/dev/ttyS%d", com);
   /* Open serial port device for reading and writing and not as controlling tty
      because we don't want to get killed if linenoise sends CTRL-C. */
   if (port_fd = open(serial_port, O_RDWR | O_NOCTTY), 
