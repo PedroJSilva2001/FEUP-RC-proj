@@ -1,5 +1,12 @@
 #include "frame.h"
-#include "../msg_macros.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
+
+static unsigned int stuff_bytes(char *info_frame, char *stuffed_info_frame, unsigned int length);
+static char frame_BCC2(char *data_packet, unsigned int data_packet_size);
 
 void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
@@ -9,57 +16,76 @@ void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[4] = FRAME_FLAG;
 }
 
-void create_information_frame(char control, char address, char *data, int data_length, char *info_frame) {
+unsigned int create_information_frame(char control, char address, char *data_packet, 
+                                      unsigned int data_packet_size, char *info_frame) {
+  unsigned int base_size = INFO_FRAME_MIN_SIZE + data_packet_size;
+  char *base_frame = (char *) malloc(sizeof (char) * base_size);
 
-  char *inf = (char *) malloc(sizeof(char) *(INFO_FRAME_MIN_SIZE + data_length)); // TODO: REVER
-  inf[0] = FRAME_FLAG;
-  inf[1] = address;
-  inf[2] = control;
-  inf[3] = FRAME_BCC1(address, control);
-  
-  // TODO: DATA
-  for (int i = 0; i < data_length; i++) {
-    inf[4 + i] = data[i];
-  }
+  base_frame[0] = FRAME_FLAG;
+  base_frame[1] = address;
+  base_frame[2] = control;
+  base_frame[3] = FRAME_BCC1(address, control);
+  memcpy(&base_frame[4], data_packet, data_packet_size);
+  base_frame[4+data_packet_size] = frame_BCC2(data_packet, data_packet_size);
+  base_frame[5+data_packet_size] = FRAME_FLAG;
 
-  // TODO: BBC2
-  //inf[4 + data_length] = BBC2
-  inf[5 + data_length] = FRAME_FLAG;
+  unsigned int size = stuff_bytes(base_frame, info_frame, base_size);
+  free(base_frame);
 
-  stuffing(inf, info_frame, INFO_FRAME_MIN_SIZE + data_length);
+  return size;
 }
 
-
-void stuffing(char *info_frame, char *stuffed_info_frame, unsigned int length) {
-  // TODO: REVER
+static unsigned int stuff_bytes(char *base, char *info_frame, unsigned int base_size) {
   unsigned int index = 1;
+  char byte;
+  unsigned int size = base_size;
 
-  for (unsigned int i = 1; i < length - 1; i++) {
-    if (info_frame[i] == FRAME_FLAG) {
+  info_frame[0] = FRAME_FLAG;
 
-      stuffed_info_frame = realloc(stuffed_info_frame, length);
-      length++;
-      
-      stuffed_info_frame[index] = ESCAPE;
-      index++;
-      stuffed_info_frame[index] = FRAME_FLAG ^ 0x20;
-
-    } else if (info_frame[i] == ESCAPE) {
-
-      stuffed_info_frame = realloc(stuffed_info_frame, length);
-      length++;
-      
-      stuffed_info_frame[index] = ESCAPE;
-      index++;
-      stuffed_info_frame[index] = ESCAPE ^ 0x20;
-
-    } else {
-
-      stuffed_info_frame[index] = info_frame[i];
+  for (unsigned int i = 1; i < base_size - 1; i++) {
+    byte = base[i];
+    switch (byte) {
+      case FRAME_FLAG:
+      case FRAME_ESCAPE:
+        info_frame = realloc(info_frame, ++size);
+        info_frame[index++] = FRAME_ESCAPE;
+        info_frame[index] = BYTE_TRANSPARENCY(byte);
+        break;
+      default:
+        info_frame[index] = byte;
+        break;
     }
-
     index++;
   }
 
-  stuffed_info_frame[index] = FRAME_FLAG;
+  info_frame[index] = FRAME_FLAG;
+
+  return size;
 }
+
+static char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
+  char BCC2 = data_packet[0];
+  for (unsigned int i = 1; i < data_packet_size; i++) {
+    BCC2 ^= data_packet[i];
+  }
+  return BCC2;
+}
+/*
+int main() {
+  char packet[3] = {0x3, FRAME_FLAG, 0x2};
+  char *info_frame = (char *) malloc(sizeof (char) * 9);;
+  unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 3, info_frame);
+  printf("size = %d\n", size);
+  
+ char packet[4] = {0x3, FRAME_ESCAPE, FRAME_FLAG, 0x2};
+  char *info_frame = (char *) malloc(sizeof (char) * 10);
+  unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 4, info_frame);
+  printf("size = %d\n", size);
+  for (size_t i = 0; i < size; i++)
+  {
+    printf("byte = %x \n", info_frame[i]);
+  }
+  
+  // flag A C bcc1 data bcc2 flag
+  // data = 0x3 esc flag^0x20 0x2
+}*/

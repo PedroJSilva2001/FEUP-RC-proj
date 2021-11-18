@@ -7,9 +7,8 @@
 #include <termios.h>
 #include <signal.h>
 #include <stdbool.h>
-
+#include <stdlib.h>
 #include "state.h"
-#include "../msg_macros.h"
 #include "frame.h"
 
 #define BAUDRATE B38400
@@ -150,20 +149,22 @@ int llopen(int com, user_type type) {
 
 int llwrite(int fd, char *buffer, int length) {
 
-  char *info_frame;
+  char *info_frame = (char *) malloc(sizeof (char) * (INFO_FRAME_MIN_SIZE + length));
   char *rr_frame;
   int tries = 0;
   int n;
   state = START;
 
-  create_information_frame(FRAME_CTRL_RR(0), FRAME_ADDR_EM, buffer, length, info_frame);
+
+  unsigned int size = create_information_frame(FRAME_CTRL_RR(0), FRAME_ADDR_EM, 
+                                              buffer, length, info_frame);
 
   (void) signal(SIGALRM, signal_handler); 
 
   do {
     tries++;
     printf("nr try: %d\n", tries);
-    n = write(fd, info_frame, INFO_FRAME_MIN_SIZE + length); 
+    n = write(fd, info_frame, size); 
 
     if (n < 0) {
       perror("write error");

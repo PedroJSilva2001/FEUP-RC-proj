@@ -1,11 +1,18 @@
 #ifndef DATA_LINK_frame_H
 #define DATA_LINK_frame_H
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "../msg_macros.h"
+#define FRAME_FLAG       0x7E
+#define FRAME_CTRL_SET   0x03
+#define FRAME_CTRL_DISC  0x0B
+#define FRAME_CTRL_UA    0x07
+#define FRAME_CTRL_RR(r) (r==0 ? 0x05 : 0x85)  
+#define FRAME_CTRL_REJ(r) (r==0 ? 0x01 : 0x81) 
+#define FRAME_ADDR_EM    0x03       // Comandos enviados pelo Emissor e Respostas enviadas pelo Receptor
+#define FRAME_ADDR_REC   0x01       // Comandos enviados pelo Receptor e Respostas enviadas pelo Emissor
+#define FRAME_BCC1(addr, ctrl)  (addr ^ ctrl)  
+#define FRAME_ESCAPE 0x7d
 
+#define CTRL_FRAME_SIZE 5
 #define INFO_FRAME_MIN_SIZE 6
 
 /** @brief Creates control frame (S and U).
@@ -22,13 +29,12 @@ void create_control_frame(char control, char address, char *ctrl_frame);
  *  @param data_length Length of the data array.
  *  @param info_frame Array that will contain the created frame.
  */
-void create_information_frame(char control, char address, char *data, int data_length, char *info_frame);
+unsigned int create_information_frame(char control, char address, char *data, unsigned int data_length, char *info_frame);
 
 /** @brief Creates a new array of the frame using the byte stuffing tecnique.
  *  @param info_frame Information frame.
  *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
  *  @param length Size of the array info_frame.
  */
-void stuffing(char *info_frame, char *stuffed_info_frame, unsigned int length);
 
 #endif
