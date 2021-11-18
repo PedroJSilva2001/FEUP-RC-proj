@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "msg_macros.h"
 #include "./data_link/frame.h"
 #include "./data_link/dl.h"
 
