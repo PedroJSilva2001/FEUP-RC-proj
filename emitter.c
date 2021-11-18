@@ -21,7 +21,6 @@
 #define LLCLOSE_ERR 3
 
 int main(int argc, char** argv) {
-  /*
   if ((argc < 2) || 
       ((strcmp("/dev/ttyS0", argv[1])!=0) && 
       (strcmp("/dev/ttyS1", argv[1])!=0)) && 
@@ -29,10 +28,10 @@ int main(int argc, char** argv) {
       (strcmp("/dev/ttyS11", argv[1])!=0)) {
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
     exit(1);
-  }*/
+  }
 
   int port_fd;
-  if (port_fd = llopen(atoi(argv[1]), EMITTER) ,
+  if (port_fd = llopen(argv[1], EMITTER) ,
       port_fd == -1) {
     printf("Serial port connection was not established correctly");
     return 1;
