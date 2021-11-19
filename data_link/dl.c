@@ -150,7 +150,7 @@ int llopen(int com, user_type type) {
 int llwrite(int fd, char *buffer, int length) {
 
   char *info_frame = (char *) malloc(sizeof (char) * (INFO_FRAME_MIN_SIZE + length));
-  char *rr_frame;
+  char rr_frame_byte;
   int tries = 0;
   int n;
   state = START;
@@ -176,9 +176,8 @@ int llwrite(int fd, char *buffer, int length) {
     state = START;
 
     while (state != STOP && failed_to_read) {
-      read(fd, &rr_frame, 1);
-      // TODO: Check RR frame
-      // TODO: Update state
+      read(fd, &rr_frame_byte, 1);
+      check_control_frame_byte(rr_frame_byte, FRAME_CTRL_RR(0), FRAME_ADDR_REC, &state);
     }
 
     if (state == STOP) {
@@ -194,10 +193,15 @@ int llwrite(int fd, char *buffer, int length) {
 
 int llread(int fd, char *buffer) {
   state = START;
+  
+  info_state i_state = START;
+  char *data;
   char i_byte;
+  unsigned int size = 0;
 
-  while (state != STOP) {
+  while (i_state != STOP) {
     read(fd, &i_byte, 1);
+    check_information_frame_byte(i_byte, FRAME_CTRL_RR(0), FRAME_ADDR_EM, &i_state, data, &size);
     // TODO: Check I frame
     // TODO: Update state
 
