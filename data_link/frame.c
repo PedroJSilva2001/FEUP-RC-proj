@@ -6,7 +6,6 @@
 #define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
 
 static unsigned int stuff_bytes(char *info_frame, char *stuffed_info_frame, unsigned int length);
-static char frame_BCC2(char *data_packet, unsigned int data_packet_size);
 
 void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
@@ -71,12 +70,11 @@ static unsigned int stuff_bytes(char *base, char *info_frame, unsigned int base_
 
 char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length) {
   char *destuffed_frame = (char *) malloc(sizeof (char) * length);
-  unsigned int index = 1;
+  unsigned int index = 0;
 
   *real_length = length;
-  destuffed_frame[0] = FRAME_FLAG;
 
-  for (unsigned int i = 1; i < length-1; i++) {
+  for (unsigned int i = 0; i < length; i++) {
     if (stuffed_info_frame[i] == FRAME_ESCAPE) {
       destuffed_frame = realloc(destuffed_frame, --(*real_length));
       destuffed_frame[index] = BYTE_TRANSPARENCY(stuffed_info_frame[i+1]);
@@ -87,12 +85,10 @@ char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int 
     index++;
   }
 
-  destuffed_frame[*real_length-1] = FRAME_FLAG;
-
   return destuffed_frame;
 }
 
-static char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
+char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
   char BCC2 = data_packet[0];
   for (unsigned int i = 1; i < data_packet_size; i++) {
     BCC2 ^= data_packet[i];

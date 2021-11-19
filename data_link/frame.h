@@ -34,4 +34,6 @@ unsigned int create_information_frame(char control, char address, char *data, un
 
 char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length);
 
+char frame_BCC2(char *data_packet, unsigned int data_packet_size);
+
 #endif
