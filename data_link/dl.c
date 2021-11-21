@@ -14,14 +14,14 @@
 #define BAUDRATE B38400
 
 static termios oldtio;
-msg_state state = START;
+ctrl_state state = C_START;
 
 int MAX_NR_TRIES = 4;
 bool failed_to_read = true;
 
 void signal_handler() {                  
 
-	if (state != STOP) {
+	if (state != C_STOP) {
     failed_to_read = true;
     printf("*NOT* received in time\n");
     return;
@@ -82,16 +82,16 @@ int llopen(int com, user_type type) {
 
           alarm(3);
           failed_to_read = true;
-          state = START;
+          state = C_START;
 
           // READ UA
-          while (state != STOP && failed_to_read) {
+          while (state != C_STOP && failed_to_read) {
             read(port_fd, &msg_byte, 1);
             printf("e: read %x\n", msg_byte);
             check_control_frame_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
           }
 
-          if (state == STOP) {
+          if (state == C_STOP) {
             failed_to_read = false;
             printf("UA received on time\n");
           }
@@ -103,14 +103,14 @@ int llopen(int com, user_type type) {
 
     case RECEIVER: {
       // READ SET
-      while (state != STOP) {
+      while (state != C_STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
         check_control_frame_byte(msg_byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
       // WRITE UA
-      if (state == STOP) {
+      if (state == C_STOP) {
 
         create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, frame);
         int n = write(port_fd, frame, CTRL_FRAME_SIZE);
@@ -152,7 +152,7 @@ int llwrite(int fd, char *buffer, int length) {
   char rr_frame_byte;
   int tries = 0;
   int n;
-  state = START;
+  state = C_START;
 
   information_frame info_frame = create_information_frame(FRAME_CTRL_RR(0), FRAME_ADDR_EM,
                                                           buffer, length);
@@ -170,14 +170,14 @@ int llwrite(int fd, char *buffer, int length) {
     
     alarm(3);
     failed_to_read = true;
-    state = START;
+    state = C_START;
 
-    while (state != STOP && failed_to_read) {
+    while (state != C_STOP && failed_to_read) {
       read(fd, &rr_frame_byte, 1);
       check_control_frame_byte(rr_frame_byte, FRAME_CTRL_RR(0), FRAME_ADDR_REC, &state);
     }
 
-    if (state == STOP) {
+    if (state == C_STOP) {
       failed_to_read = false;
       printf("RR received on time\n");
     }
@@ -189,14 +189,14 @@ int llwrite(int fd, char *buffer, int length) {
 
 
 int llread(int fd, char *buffer) {
-  state = START;
+  state = C_START;
   
-  info_state i_state = START;
+  info_state i_state = I_START;
   char *data;
   char i_byte;
   unsigned int size = 0;
 
-  while (i_state != STOP) {
+  while (i_state != I_STOP) {
     read(fd, &i_byte, 1);
     check_information_frame_byte(i_byte, FRAME_CTRL_RR(0), FRAME_ADDR_EM, &i_state, data, &size);
     // TODO: Check I frame
@@ -221,7 +221,6 @@ int llclose(int port_fd, user_type type) {
   failed_to_read = true;
 
   switch (type) {
-      
     case EMITTER: {
         int tries = 0;
         create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, frame);
@@ -237,23 +236,23 @@ int llclose(int port_fd, user_type type) {
 
           alarm(3);
           failed_to_read = true;
-          state = START;
+          state = C_START;
 
           // READ DISC
-          while (state != STOP && failed_to_read) {
+          while (state != C_STOP && failed_to_read) {
             read(port_fd, &msg_byte, 1);
             printf("e: read %x\n", msg_byte);
             check_control_frame_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
           }
 
-          if (state == STOP) {
+          if (state == C_STOP) {
             failed_to_read = false;
             printf("UA received on time\n");
           }
 
         } while (tries < MAX_NR_TRIES && failed_to_read);
 
-        if (state != STOP) {
+        if (state != C_STOP) {
           printf("Failed: timeout");
           return -1;
         }
@@ -268,13 +267,13 @@ int llclose(int port_fd, user_type type) {
 
     case RECEIVER: {
       // READ DISC
-      while (state != STOP) {
+      while (state != C_STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
         check_control_frame_byte(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
-      if (state != STOP) {
+      if (state != C_STOP) {
         printf("Failed: no DISC received\n");
         return -1;
       }
@@ -289,15 +288,15 @@ int llclose(int port_fd, user_type type) {
       }
 
       // READ UA
-      state = START;
+      state = C_START;
 
-      while (state != STOP) {
+      while (state != C_STOP) {
         read(port_fd, &msg_byte, 1);
         printf("r: read %x\n", msg_byte);
         check_control_frame_byte(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
       }
 
-      if (state != STOP) {
+      if (state != C_STOP) {
         printf("Failed: no UA received\n");
         return -1;
       }

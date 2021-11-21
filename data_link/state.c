@@ -3,45 +3,45 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void check_control_frame_byte(char byte, char control, char address, msg_state *state) {
+void check_control_frame_byte(char byte, char control, char address, ctrl_state *state) {
   switch (*state) {
-    case START:
+    case C_START:
       if (byte == FRAME_FLAG) {
-        *state = FLAG_RCV; 
+        *state = C_FLAG_RCV; 
       } break;
 
-    case FLAG_RCV:
+    case C_FLAG_RCV:
       if (byte == address)  {
-        *state = A_RCV;
+        *state = C_A_RCV;
       } else if (byte == FRAME_FLAG) {
-        *state = FLAG_RCV;
+        *state = C_FLAG_RCV;
       } else {
-        *state = START; 
+        *state = C_START; 
       } break;
 
-    case A_RCV:
+    case C_A_RCV:
       if (byte == control) {
-        *state = C_RCV;
+        *state = C_C_RCV;
       } else if (byte == FRAME_FLAG) {
-        *state = FLAG_RCV;
+        *state = C_FLAG_RCV;
       } else {
-        *state = START; 
+        *state = C_START; 
       } break;
 
-    case C_RCV:
+    case C_C_RCV:
       if (byte == address ^ control) {
-        *state = BCC_OK;
+        *state = C_BCC_OK;
       } else if (byte == FRAME_FLAG) {
-        *state = FLAG_RCV;
+        *state = C_FLAG_RCV;
       } else {
-        *state = START; 
+        *state = C_START; 
       } break;
 
-    case BCC_OK:
+    case C_BCC_OK:
       if (byte == FRAME_FLAG) {
-        *state = STOP;
+        *state = C_STOP;
       } else {
-        *state = START; 
+        *state = C_START; 
       } break;
   }
 }
@@ -49,51 +49,51 @@ void check_control_frame_byte(char byte, char control, char address, msg_state *
 
 void check_information_frame_byte(char byte, char control, char address, info_state *state, char *data, unsigned int *size) {
   switch (*state) {
-    case ISTART:
+    case I_START:
       if (byte == FRAME_FLAG) {
-        *state = IFLAG_RCV; 
+        *state = I_FLAG_RCV; 
       } break;
 
-    case IFLAG_RCV:
+    case I_FLAG_RCV:
       if (byte == address)  {
-        *state = IA_RCV;
+        *state = I_A_RCV;
       } else if (byte == FRAME_FLAG) {
-        *state = IFLAG_RCV;
+        *state = I_FLAG_RCV;
       } else {
-        *state = ISTART; 
+        *state = I_START; 
       } break;
 
-    case IA_RCV:
+    case I_A_RCV:
       if (byte == control) {
-        *state = IC_RCV;
+        *state = I_C_RCV;
       } else if (byte == FRAME_FLAG) {
-        *state = IFLAG_RCV;
+        *state = I_FLAG_RCV;
       } else {
-        *state = ISTART; 
+        *state = I_START; 
       } break;
 
-    case IC_RCV:
+    case I_C_RCV:
       if (byte == address ^ control) {
-        *state = IBCC1_OK;
+        *state = I_BCC1_OK;
       } else if (byte == FRAME_FLAG) {
-        *state = IFLAG_RCV;
+        *state = I_FLAG_RCV;
       } else {
-        *state = ISTART; 
+        *state = I_START; 
       } break;
 
-    case IBCC1_OK:
-      *state = IDATA;
+    case I_BCC1_OK:
+      *state = I_DATA;
 
-    case IDATA:
+    case I_DATA:
         if (byte == FRAME_FLAG) {
-            *state = IBCC2_OK;
+            *state = I_BCC2_OK;
         } else {
             data = realloc(data, ++(*size));
             data[(*size)-1] = byte;
             break;
         } 
     
-    case IBCC2_OK:
+    case I_BCC2_OK:
         data = realloc(data, *size);
         char bcc2 = data[(*size)-1];
         data = realloc(data, --(*size));
@@ -106,9 +106,9 @@ void check_information_frame_byte(char byte, char control, char address, info_st
         data = destuff_data;
 
         if (bcc2 == frame_BCC2(data, *size)) {
-            *state = ISTOP;
+            *state = I_STOP;
         } else {
-            *state = ISTART; 
+            *state = I_START; 
         } break;
      
   }
