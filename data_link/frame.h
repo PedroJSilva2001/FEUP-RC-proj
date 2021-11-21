@@ -15,6 +15,15 @@
 #define CTRL_FRAME_SIZE 5
 #define INFO_FRAME_MIN_SIZE 6
 
+
+typedef struct {
+    char *bytes;
+    unsigned int size;
+} container;
+
+typedef container information_frame;
+typedef container data_packet;
+
 /** @brief Creates control frame (S and U).
  *  @param control Control byte.
  *  @param address Address byte.
@@ -29,7 +38,7 @@ void create_control_frame(char control, char address, char *ctrl_frame);
  *  @param data_length Length of the data array.
  *  @param info_frame Array that will contain the created frame.
  */
-unsigned int create_information_frame(char control, char address, char *data, unsigned int data_length, char *info_frame);
+information_frame create_information_frame(char control, char address, char *data, unsigned int data_size);
 
 
 char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length);

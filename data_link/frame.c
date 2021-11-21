@@ -5,7 +5,7 @@
 
 #define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
 
-static unsigned int stuff_bytes(char *info_frame, char *stuffed_info_frame, unsigned int length);
+static unsigned int stuff_bytes(char *base, unsigned int base_size, char *info_frame_bytes);
 
 void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
@@ -15,23 +15,28 @@ void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[4] = FRAME_FLAG;
 }
 
-unsigned int create_information_frame(char control, char address, char *data_packet, 
-                                      unsigned int data_packet_size, char *info_frame) {
-  unsigned int base_size = INFO_FRAME_MIN_SIZE + data_packet_size;
+information_frame create_information_frame(char control, char address, char *data, unsigned int data_size) {
+  unsigned int base_size = INFO_FRAME_MIN_SIZE + data_size;
   char *base_frame = (char *) malloc(sizeof (char) * base_size);
+  char *bytes = (char *) malloc(sizeof (char) * base_size);
+  information_frame info_frame;
 
   base_frame[0] = FRAME_FLAG;
   base_frame[1] = address;
   base_frame[2] = control;
   base_frame[3] = FRAME_BCC1(address, control);
-  memcpy(&base_frame[4], data_packet, data_packet_size);
-  base_frame[4+data_packet_size] = frame_BCC2(data_packet, data_packet_size);
-  base_frame[5+data_packet_size] = FRAME_FLAG;
+  memcpy(&base_frame[4], data, data_size);
+  base_frame[4+data_size] = frame_BCC2(data, data_size);
+  base_frame[5+data_size] = FRAME_FLAG;
 
-  unsigned int size = stuff_bytes(base_frame, info_frame, base_size);
+  unsigned int size = stuff_bytes(base_frame, base_size, bytes);
+
   free(base_frame);
 
-  return size;
+  info_frame.bytes = bytes;
+  info_frame.size = size;
+
+  return info_frame;
 }
 
 /** @brief Creates a new array of the frame using the byte stuffing tecnique.
@@ -39,30 +44,30 @@ unsigned int create_information_frame(char control, char address, char *data_pac
  *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
  *  @param length Size of the array info_frame.
  */
-static unsigned int stuff_bytes(char *base, char *info_frame, unsigned int base_size) {
+static unsigned int stuff_bytes(char *base, unsigned int base_size, char *info_frame_bytes) {
   unsigned int index = 1;
   char byte;
   unsigned int size = base_size;
 
-  info_frame[0] = FRAME_FLAG;
+  info_frame_bytes[0] = FRAME_FLAG;
 
   for (unsigned int i = 1; i < base_size - 1; i++) {
     byte = base[i];
     switch (byte) {
       case FRAME_FLAG:
       case FRAME_ESCAPE:
-        info_frame = realloc(info_frame, ++size);
-        info_frame[index++] = FRAME_ESCAPE;
-        info_frame[index] = BYTE_TRANSPARENCY(byte);
+        info_frame_bytes = realloc(info_frame_bytes, ++size);
+        info_frame_bytes[index++] = FRAME_ESCAPE;
+        info_frame_bytes[index] = BYTE_TRANSPARENCY(byte);
         break;
       default:
-        info_frame[index] = byte;
+        info_frame_bytes[index] = byte;
         break;
     }
     index++;
   }
 
-  info_frame[index] = FRAME_FLAG;
+  info_frame_bytes[index] = FRAME_FLAG;
 
   return size;
 }
