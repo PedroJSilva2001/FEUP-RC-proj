@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void create_control_packet(char control, char type, unsigned int size, char *ctrl_packet, char *data, unsigned int *packet_length) {
+void create_control_packet(char control, char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length) {
 
     *packet_length = CTRL_PACKET_MIN_SIZE + size;
     ctrl_packet = (char *) malloc(sizeof (char) * (*packet_length));
@@ -13,6 +13,17 @@ void create_control_packet(char control, char type, unsigned int size, char *ctr
     ctrl_packet[2] = size;
 
     memcpy(&ctrl_packet[3], data, size);
+}
+
+void add_to_control_packet(char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length) {
+    unsigned int old_packet_size = *packet_length;
+    *packet_length += 2 + size;
+    ctrl_packet = (char *) realloc(ctrl_packet, sizeof (char) * (*packet_length));
+
+    ctrl_packet[old_packet_size] = type;
+    ctrl_packet[old_packet_size + 1] = size;
+
+    memcpy(&ctrl_packet[old_packet_size + 2], data, size);
 }
 
 void create_data_packet(unsigned int sequence_nr, char* data, unsigned int size, char *data_packet, unsigned int *packet_length) {
