@@ -11,6 +11,7 @@
 #define FRAME_ADDR_REC   0x01       // Comandos enviados pelo Receptor e Respostas enviadas pelo Emissor
 #define FRAME_BCC1(addr, ctrl)  (addr ^ ctrl)  
 #define FRAME_ESCAPE 0x7d
+#define FRAME_CTRL_INFO(s) (s==0 ? 0x00 : 0x40)
 
 #define CTRL_FRAME_SIZE 5
 #define INFO_FRAME_MIN_SIZE 6
