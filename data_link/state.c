@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void check_control_frame_byte(char byte, char control, char address, ctrl_state *state) {
+void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_state *state) {
   switch (*state) {
     case C_START:
       if (byte == FRAME_FLAG) {
@@ -47,7 +47,7 @@ void check_control_frame_byte(char byte, char control, char address, ctrl_state 
 }
 
 
-void check_information_frame_byte(char byte, char control, char address, info_state *state, char *data, unsigned int *size) {
+void handle_information_frame_state(char byte, char control, char address, info_state *state, char *data, unsigned int *size) {
   switch (*state) {
     case I_START:
       if (byte == FRAME_FLAG) {
@@ -112,4 +112,8 @@ void check_information_frame_byte(char byte, char control, char address, info_st
         } break;
      
   }
+}
+
+void handle_supervision_frame_state(char byte, char control, char address, ctrl_state *state) {
+  
 }

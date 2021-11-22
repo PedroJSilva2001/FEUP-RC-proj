@@ -10,7 +10,9 @@ typedef enum {
     C_A_RCV,
     C_C_RCV,
     C_BCC_OK,
-    C_STOP
+    C_STOP,
+    C_RR_RCV,
+    C_REJ_RCV,
 } ctrl_state;
 
 /**
@@ -33,8 +35,10 @@ typedef enum {
  *  @param address Address byte.
  *  @param state Current state of the state machine.
  */
-void check_control_frame_byte(char ctrl_byte, char control, char address, ctrl_state *state);
+void handle_unnumbered_frame_state(char ctrl_byte, char control, char address, ctrl_state *state);
 
-void check_information_frame_byte(char byte, char control, char address, info_state *state, char *data, unsigned int *size);
+void handle_information_frame_state(char byte, char control, char address, info_state *state, char *data, unsigned int *size);
+
+void handle_supervision_frame_state(char byte, char control, char address, ctrl_state *state);
 
 #endif
