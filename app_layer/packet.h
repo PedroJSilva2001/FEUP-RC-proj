@@ -14,7 +14,7 @@
 #define PACKET_CTRL_DATA 0x01
 
 #define PACKET_DATA_MIN_SIZE 4
-
+#define PACKET_MAX_DATA_SIZE 1024
 
 
 void create_control_packet(char control, char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length);
@@ -22,6 +22,5 @@ void create_control_packet(char control, char type, unsigned int size, char *dat
 void create_data_packet(unsigned int sequence_nr, char* data, unsigned int size, char *data_packet, unsigned int *packet_length); 
 
 void add_to_control_packet(char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length);
-
 
 #endif
