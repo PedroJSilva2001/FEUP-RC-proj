@@ -18,6 +18,7 @@ int send_control_packet(int fd, char *filename, unsigned long file_size, char co
         printf("Not possible to send control app packet!\n");
         return -1;
     }
+
     return 0;
 }
 
@@ -52,6 +53,8 @@ int send_data_packet(int fd, char *filename, unsigned long size) {
         sequence_nr++;
     }
 
+
+    free(data);
     return 0;
 }
 
@@ -70,5 +73,88 @@ int send_file(int fd, char *filename, unsigned long size) {
 
 
     printf("Application packets sent\n");
+    return 0;
+}
+
+int read_control_packet(int fd, char *filename, unsigned long *length) {
+    char *bytes = (char *) malloc(sizeof(char));
+    unsigned long nr_bytes_read = llread(fd, bytes);
+
+    // TODO
+    unsigned long current_byte = 0;
+
+    while (current_byte < nr_bytes_read){
+        unsigned long size = bytes[2];
+        
+        switch (bytes[1]) {
+            case PACKET_T_LENGTH:
+                memcpy(length, &bytes[3], size);
+                break;
+
+            case PACKET_T_NAME: 
+                filename = realloc(filename, size);
+                memcpy(filename, &bytes[3], size);
+                break;
+        }
+
+        current_byte++;
+    }
+
+
+    free(bytes);
+    return 0;
+
+}
+
+int read_data_packets(int fd, char *filename, unsigned long size) {
+    FILE *file;
+
+    if ((file = fopen(filename, "wb")) == NULL) {
+        printf("Not possible to create file!\n");
+        return -1;
+    }
+
+    unsigned int current_sequence_nr = 0;
+    unsigned long nr_bytes_read = 0;
+
+    while (nr_bytes_read < size) {
+        char *buffer;
+        char data[PACKET_MAX_DATA_SIZE];
+
+        nr_bytes_read += llread(fd, buffer);
+
+        unsigned int seq = buffer[1];
+
+        // TODO: IGNORAR SE FOR REPETIDO: SEQ < CURRENT ??
+        if (seq != current_sequence_nr) {
+            fclose(file);
+            printf("Data packets not in order!\n");
+            return -1;
+        }
+
+        unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
+
+        memcpy(data, &buffer[4], data_length);
+        fwrite(data, sizeof(char), data_length, file);
+
+        current_sequence_nr = (current_sequence_nr + 1) % 256;
+    }
+
+    fclose(file);
+    return 0;
+}
+
+
+int receive_file(int fd) {
+    char *filename = (char *) malloc(sizeof(char));
+    unsigned long size;
+    
+    if (read_control_packet(fd, filename, &size) < 0)
+        return -1;
+
+    if (read_data_packets(fd, filename, size) < 0) 
+        return -1;
+    
+    free(filename);
     return 0;
 }
