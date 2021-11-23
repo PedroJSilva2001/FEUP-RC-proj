@@ -12,7 +12,7 @@
 #include "frame.h"
 
 #define BAUDRATE B38400
-#define MAX_NR_TRIES 4
+#define MAX_NR_TRIES 3
 
 static void timeout_handler(int sig);
 static void init_timeout_handler();
@@ -20,7 +20,7 @@ static void init_timeout_handler();
 static termios oldtio;
 static int tries = 0;
 static bool timeout = false;
-static int seq_num = 0;
+static char seq_num = 0;
 
 int llopen(int com, user_type type) {
   int port_fd;
@@ -124,8 +124,7 @@ int llwrite(int fd, char *buffer, int length) {
   ctrl_state state = C_START;
   ctrl_state rec_state = C_START;
 
-  information_frame info_frame = create_information_frame(FRAME_CTRL_INFO(seq_num), FRAME_ADDR_EM,
-                                                          buffer, length);
+  information_frame info_frame = create_information_frame(seq_num, buffer, length);
 
   do {
     printf("try nº: %d\n", tries);
@@ -137,7 +136,7 @@ int llwrite(int fd, char *buffer, int length) {
 
     while (state != C_STOP && !timeout) {
       read(fd, &byte, 1);
-      handle_supervision_frame_state(byte, FRAME_CTRL_RR(seq_num), FRAME_CTRL_REJ(seq_num), &state);
+      handle_supervision_frame_state(byte, seq_num, &state);
 
       if (state == C_REJ_RCV || state == C_RR_RCV) {
         rec_state = state;
@@ -163,17 +162,15 @@ int llwrite(int fd, char *buffer, int length) {
 }
 
 
-int llread(int fd, char *buffer) {
-  //state = C_START;
-  
-  info_state i_state = I_START;
+int llread(int fd, char *buffer) {  
+  info_state state = I_START;
   char *data;
-  char i_byte;
+  char byte;
   unsigned int size = 0;
 
-  while (i_state != I_STOP) {
-    read(fd, &i_byte, 1);
-    handle_information_frame_state(i_byte, FRAME_CTRL_RR(0), FRAME_ADDR_EM, &i_state, data, &size);
+  while (state != I_STOP) {
+    read(fd, &byte, 1);
+    handle_information_frame_state(byte, seq_num, &state, data, &size);
     // TODO: Check I frame
     // TODO: Update state
 
@@ -191,7 +188,7 @@ int llread(int fd, char *buffer) {
 
 
 int llclose(int port_fd, user_type type) {
-  char msg_byte = 0;
+  char byte = 0;
   char ctrl_frame[CTRL_FRAME_SIZE];
   //failed_to_read = true;
   ctrl_state state = C_START;
@@ -215,9 +212,9 @@ int llclose(int port_fd, user_type type) {
           state = C_START;
 
           while (state != C_STOP /*&& failed_to_read*/) {
-            read(port_fd, &msg_byte, 1);
-            printf("e: read %x\n", msg_byte);
-            handle_unnumbered_frame_state(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
+            read(port_fd, &byte, 1);
+            printf("e: read %x\n", byte);
+            handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
           }
 
           if (state == C_STOP) {
@@ -240,9 +237,9 @@ int llclose(int port_fd, user_type type) {
     case RECEIVER: {
       // READ DISC
       while (state != C_STOP) {
-        read(port_fd, &msg_byte, 1);
-        printf("r: read %x\n", msg_byte);
-        handle_unnumbered_frame_state(msg_byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
+        read(port_fd, &byte, 1);
+        printf("r: read %x\n", byte);
+        handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
       if (state != C_STOP) {
@@ -258,9 +255,9 @@ int llclose(int port_fd, user_type type) {
       state = C_START;
 
       while (state != C_STOP) {
-        read(port_fd, &msg_byte, 1);
-        printf("r: read %x\n", msg_byte);
-        handle_unnumbered_frame_state(msg_byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
+        read(port_fd, &byte, 1);
+        printf("r: read %x\n", byte);
+        handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
       }
 
       if (state != C_STOP) {

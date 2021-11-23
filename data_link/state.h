@@ -37,8 +37,8 @@ typedef enum {
  */
 void handle_unnumbered_frame_state(char ctrl_byte, char control, char address, ctrl_state *state);
 
-void handle_information_frame_state(char byte, char control, char address, info_state *state, char *data, unsigned int *size);
+void handle_information_frame_state(char byte, char s, info_state *state, char *data, unsigned int *size);
 
-void handle_supervision_frame_state(char byte, char control, char address, ctrl_state *state);
+void handle_supervision_frame_state(char byte, char r, ctrl_state *state);
 
 #endif

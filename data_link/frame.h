@@ -39,8 +39,7 @@ void create_control_frame(char control, char address, char *ctrl_frame);
  *  @param data_length Length of the data array.
  *  @param info_frame Array that will contain the created frame.
  */
-information_frame create_information_frame(char control, char address, char *data, unsigned int data_size);
-
+information_frame create_information_frame(char sequence_number, char *data, unsigned int data_size);
 
 char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length);
 
