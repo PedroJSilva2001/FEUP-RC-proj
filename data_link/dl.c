@@ -124,6 +124,7 @@ int llopen(int com, user_type type) {
 
 
 int llwrite(int port_fd, char *data, int size) {
+  init_timeout_handler();
   char byte;
   tries = 0;
   ctrl_state state = C_START;
@@ -152,14 +153,14 @@ int llwrite(int port_fd, char *data, int size) {
   
   alarm(0);
 
+  printf("current_state: %d\n", state);
   if (state == C_STOP) {
     if (rec_state == C_RR_RCV) {
       seq_num = 1-seq_num;
-      return 0;
+      return size;
     } else {
       printf("Receiver rejected frame. Resending..\n");
       return llwrite(port_fd, data, size);
-      //return 1;
     }
   }
 
@@ -168,7 +169,8 @@ int llwrite(int port_fd, char *data, int size) {
 }
 
 
-int llread(int port_fd, char *data) {  
+int llread(int port_fd, char *data) { 
+  init_timeout_handler(); 
   info_state state = I_START;
   info_state type_state = I_START;
   char byte;
@@ -196,11 +198,14 @@ int llread(int port_fd, char *data) {
     }
   } while (tries <= MAX_NR_TRIES && timeout);
         
+  printf("199:state_rec: %d\n",  state);      
   alarm(0);
 
+  printf("state_rec: %d\n",  state);
   if (state != I_STOP) {
     return -1;
   }
+
 
   char frame[CTRL_FRAME_SIZE];
 

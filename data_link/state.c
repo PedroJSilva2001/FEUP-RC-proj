@@ -6,11 +6,14 @@
 void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_state *state) {
   switch (*state) {
     case C_START:
+      printf("Cstart\n");
       if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV; 
       } break;
 
     case C_FLAG_RCV:
+      printf("cflagrcv\n");
+
       if (byte == address)  {
         *state = C_A_RCV;
       } else if (byte == FRAME_FLAG) {
@@ -20,6 +23,8 @@ void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_s
       } break;
 
     case C_A_RCV:
+      printf("Carcv\n");
+
       if (byte == control) {
         *state = C_C_RCV;
       } else if (byte == FRAME_FLAG) {
@@ -29,6 +34,8 @@ void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_s
       } break;
 
     case C_C_RCV:
+      printf("Ccrcv\n");
+
       if (byte == address ^ control) {
         *state = C_BCC_OK;
       } else if (byte == FRAME_FLAG) {
@@ -38,8 +45,12 @@ void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_s
       } break;
 
     case C_BCC_OK:
+      printf("cbcc\n");
+
       if (byte == FRAME_FLAG) {
         *state = C_STOP;
+        printf("cstop\n");
+
       } else {
         *state = C_START; 
       } break;
@@ -55,7 +66,7 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
     break;
 
     case I_FLAG_RCV:
-      if (byte == FRAME_ADDR_REC)
+      if (byte == FRAME_ADDR_REC)   // TODO: ERRADO?
         *state = I_INFO_A_RCV;
       else if (byte == FRAME_ADDR_EM)
         *state = I_SET_A_RCV;
