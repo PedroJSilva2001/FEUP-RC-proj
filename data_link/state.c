@@ -66,10 +66,10 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
     break;
 
     case I_FLAG_RCV:
-      if (byte == FRAME_ADDR_REC)   // TODO: ERRADO?
+      if (byte == FRAME_ADDR_EM)   // TODO: ERRADO?
         *state = I_INFO_A_RCV;
-      else if (byte == FRAME_ADDR_EM)
-        *state = I_SET_A_RCV;
+      /* else if (byte == FRAME_ADDR_EM)
+        *state = I_SET_A_RCV; */
       else if (byte == FRAME_FLAG)
         *state = I_FLAG_RCV;
       else
@@ -114,9 +114,9 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
 
     case I_SET_BCC1_OK:
       if (byte == FRAME_FLAG)
-        *state = C_STOP;
+        *state = I_STOP;
       else
-        *state = C_START; 
+        *state = I_START; 
     break;
 
     case I_INFO_BCC1_OK:
@@ -159,11 +159,11 @@ void handle_supervision_frame_state(char byte, char r, ctrl_state *state) {
   switch (*state) {
     case C_START:
       if (byte == FRAME_FLAG)
-        *state = I_FLAG_RCV;
+        *state = C_FLAG_RCV;
     break;
     
     case C_FLAG_RCV:
-      if (byte == FRAME_ADDR_EM)
+      if (byte == FRAME_ADDR_REC)
         *state = C_A_RCV;
       else if
         (byte == FRAME_FLAG) *state = C_FLAG_RCV;
