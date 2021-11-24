@@ -7,7 +7,7 @@
 #include "../data_link/dl.h"
 
 int send_control_packet(int fd, char *filename, unsigned long file_size, char control) {
-    char *ctrl_packet;
+    char *ctrl_packet = (char *) malloc(sizeof (char) * (CTRL_PACKET_MIN_SIZE + sizeof (unsigned long)));
     unsigned int packet_length;
     char *size_buf = (char *) &file_size;
 
@@ -59,15 +59,15 @@ int send_data_packet(int fd, char *filename, unsigned long size) {
 }
 
 int send_file(int fd, char *filename, unsigned long size) {
-
+    printf("Sending start control packets...\n");
     if (send_control_packet(fd, filename, size, PACKET_CTRL_START) < 0)
         return -1;
 
-
+    printf("Sending data packets...\n");
     if (send_data_packet(fd, filename, size) < 0)
         return -1;
 
-
+    printf("Sending end control packets...\n");
     if (send_control_packet(fd, filename, size, PACKET_CTRL_END) < 0)
         return -1;
 

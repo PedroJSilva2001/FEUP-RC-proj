@@ -16,9 +16,9 @@ void create_control_packet(char control, char type, unsigned int size, char *dat
 }
 
 void add_to_control_packet(char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length) {
-    unsigned int old_packet_size = *packet_length;
+    unsigned int old_packet_size = *packet_length;;
     *packet_length += 2 + size;
-    ctrl_packet = (char *) realloc(ctrl_packet, sizeof (char) * (*packet_length));
+    ctrl_packet = realloc(ctrl_packet, sizeof (char) * (int)(*packet_length));
 
     ctrl_packet[old_packet_size] = type;
     ctrl_packet[old_packet_size + 1] = size;
