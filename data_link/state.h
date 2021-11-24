@@ -27,6 +27,7 @@ typedef enum {
     I_SET_BCC1_OK,
     I_DATA,
     I_BCC2_OK,
+    I_BBC2_NOT_OK,
     I_STOP,
     I_INFO_C_RCV,
     I_SET_C_RCV,

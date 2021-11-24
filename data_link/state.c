@@ -112,32 +112,34 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
       *state = I_DATA;
 
     case I_DATA:
-      if (byte == FRAME_FLAG)
-        *state = I_BCC2_OK;
+      if (byte == FRAME_FLAG) {
+        //data = realloc(data, *size);  // this might not work (data is passed as char *)
+
+        int real_size;
+        char *destuff_data = destuff_bytes(data, *size, &real_size);
+        char bcc2 = destuff_data[(*size)-1];
+        *size = real_size - 1;        // Remove BBC2 byte
+        data = realloc(data, *size); 
+        data = destuff_data;
+
+        if (bcc2 == frame_BCC2(data, *size))
+          *state = I_BCC2_OK;
+        else
+          *state = I_BBC2_NOT_OK;
+      }
       else {
         data = realloc(data, ++(*size));
         data[(*size)-1] = byte;
       }
-    break; 
+    break;
+
+    case I_BBC2_NOT_OK:
     
-    case I_BCC2_OK: {
-      data = realloc(data, *size);  // this might not work (data is passed as char *)
-      char bcc2 = data[(*size)-1];   // dont remove bcc2 from data. it's needed in llwrite()
-      data = realloc(data, --(*size));
-
-      int real_size;
-      char *destuff_data = destuff_bytes(data, *size, &real_size);
-
-      *size = real_size;
-      data = realloc(data, *size); // why is this even needed
-      data = destuff_data;
-
-      /*if (bcc2 == frame_BCC2(data, *size))
-        *state = I_STOP;
-      else
-        *state = I_START;*/
-      *state = I_STOP;
-    }
+    case I_BCC2_OK:
+        if (byte == FRAME_FLAG)
+          *state = I_STOP;
+        else
+          *state = I_START;  
     break;
   }
 }

@@ -173,6 +173,7 @@ int llread(int port_fd, char *data) {
   char byte;
   unsigned int size = 0;
   tries = 0;
+  bool is_bbc2_ok = false;
 
   do {
     printf("try nº: %d\n", tries);
@@ -184,8 +185,12 @@ int llread(int port_fd, char *data) {
       read(port_fd, &byte, 1);
       printf("e: read %x\n", byte);
       handle_information_frame_state(byte, seq_num, &state, data, &size);
+
       if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
         type_state = state;
+      }
+      else if (state == I_BCC2_OK || state == I_BBC2_NOT_OK){
+        is_bbc2_ok = (state == I_BCC2_OK) ? true : false;
       }
     }
   } while (tries <= MAX_NR_TRIES && timeout);
@@ -197,15 +202,17 @@ int llread(int port_fd, char *data) {
   }
 
   char frame[CTRL_FRAME_SIZE];
-  char data_BCC2 = data[size-1];
 
   if (type_state == I_INFO_C_RCV) {
-    if (data_BCC2 == frame_BCC2(data,size-1)) {
+    if (is_bbc2_ok) {
+      printf("bcc2 fixe\n");
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_REC, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
-      seq_num = 1-seq_num;
-      return size - 1 - INFO_FRAME_MIN_SIZE; // remove 1 because bcc2 is in data
+      seq_num = 1 - seq_num;
+      return size - INFO_FRAME_MIN_SIZE;
     }
+      printf("bcc2 not fixe\n");
+
     create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_REC, frame);
     write(port_fd, frame, CTRL_FRAME_SIZE); 
     return -2;
@@ -215,12 +222,10 @@ int llread(int port_fd, char *data) {
   return -3;
 }
 
-
-
 int llclose(int port_fd, user_type type) {
   char byte = 0;
   char ctrl_frame[CTRL_FRAME_SIZE];
-  //failed_to_read = true;
+  bool failed_to_read = true;
   ctrl_state state = C_START;
   switch (type) {
     case EMITTER: {
@@ -230,7 +235,7 @@ int llclose(int port_fd, user_type type) {
 
       //signal(SIGALRM, signal_handler); 
 
-      while (tries <= MAX_NR_TRIES /*&& failed_to_read*/) {
+      while (tries <= MAX_NR_TRIES && failed_to_read) {
         tries++;
         printf("nr try: %d\n", tries);
 
@@ -238,21 +243,21 @@ int llclose(int port_fd, user_type type) {
         printf("Termination of connection\n");
 
         alarm(3);
-        //failed_to_read = true;
+        failed_to_read = true;
         state = C_START;
 
-        while (state != C_STOP /*&& failed_to_read*/) {
+        while (state != C_STOP && failed_to_read) {
           read(port_fd, &byte, 1);
-          printf("e: read %x\n", byte);
+          printf("disc_ e: read %x\n", byte);
           handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
         }
 
         if (state == C_STOP) {
-          /*failed_to_read = false;*/
+          failed_to_read = false;
           printf("DISC received on time\n");
         }
 
-      } while (tries <= MAX_NR_TRIES /*&& failed_to_read*/);
+      } while (tries <= MAX_NR_TRIES && failed_to_read);
 
       if (state != C_STOP) {
         printf("Failed: timeout");
@@ -268,7 +273,7 @@ int llclose(int port_fd, user_type type) {
       // READ DISC
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
-        printf("r: read %x\n", byte);
+        printf("disc_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
@@ -286,7 +291,7 @@ int llclose(int port_fd, user_type type) {
 
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
-        printf("r: read %x\n", byte);
+        printf("ua_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
       }
 
