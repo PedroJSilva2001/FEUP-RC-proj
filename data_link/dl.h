@@ -13,9 +13,9 @@ typedef struct termios termios;
 
 int llopen(int com, user_type type);
 
-int llwrite(int fd, char *buffer, int length);
+int llwrite(int port_fd, char *data, int size);
 
-int llread(int fd, char *buffer);
+int llread(int port_fd, char *data);
 
 int llclose(int port_fd, user_type type);
 
