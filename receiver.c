@@ -11,6 +11,7 @@
 #include <string.h>
 #include "./data_link/frame.h"
 #include "./data_link/dl.h"
+#include "./app_layer/app_layer.h"
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -19,14 +20,14 @@
 #define LLCLOSE_ERR 3
 
 int main(int argc, char** argv) {
-  /*if ( (argc < 2) || 
-        ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-        (strcmp("/dev/ttyS1", argv[1])!=0)) && 
-        (strcmp("/dev/ttyS10", argv[1])!=0) &&
-        (strcmp("/dev/ttyS11", argv[1])!=0)) {
-    printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
+  if ((argc < 3) || 
+      ((strcmp("/dev/ttyS0", argv[1])!=0) && 
+      (strcmp("/dev/ttyS1", argv[1])!=0)) && 
+      (strcmp("/dev/ttyS10", argv[1])!=0) &&
+      (strcmp("/dev/ttyS11", argv[1])!=0)) {
+    printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1 filename.png\n");
     exit(1);
-  }*/
+  }
 
   int port_fd;
   const char *port = &argv[1][strlen("/dev/ttyS")];
@@ -36,40 +37,12 @@ int main(int argc, char** argv) {
     return LLOPEN_ERR;
   }
   
-  /*
-  char SET_packet[CTRL_PACKET_SIZE];
-  char UA_packet[CTRL_PACKET_SIZE];
-
-  create_control_packet(FRAME_CTRL_UA, FRAME_ADDR_REC, UA_packet);
-
-  int n;
-  int i = 0;
-  
-  for (; i < 5 ; i++) {
-    if (n = read(port_fd, &SET_packet[i], 1) , 
-        n < 0) {
-      perror(argv[1]);
-      exit(-4);
-    }               
-  }*/
-
-  // If received message is correct
-/*
-  if (check_msg(SET_packet, FRAME_ADDR_EM, FRAME_CTRL_SET, &state) == 0) {
-   
-    printf("%ld bytes read from the serial port\n", sizeof SET_packet / sizeof SET_packet[0]);
-    printf("Message received: %x %x %x %x %x\n", SET_packet[0], SET_packet[1], SET_packet[2], SET_packet[3], SET_packet[4]);
-
-    for (i = 0; i < 5 ; i++) {
-      if (n = write(port_fd, &UA_packet[i], 1) < 0) {
-        perror(argv[1]);
-        exit(-3);
-      }               
-    }
-    printf("%ld bytes written to the serial port. \n", sizeof UA_packet / sizeof UA_packet[0]);
-  }*/
+  if (receive_file(port_fd) < 0) {
+    printf("Error in receiving file!\n");
+  }
 
   if (llclose(port_fd, RECEIVER) < 0) {
     return LLCLOSE_ERR;
   }
+  return 0;
 }
