@@ -58,7 +58,7 @@ int llopen(int com, user_type type) {
 
   char byte = 0;
   char frame[CTRL_FRAME_SIZE];
-  ctrl_state state;
+  ctrl_state state = C_START;
 
   switch (type) {
     case EMITTER: {
@@ -77,8 +77,9 @@ int llopen(int com, user_type type) {
           // READ UA
           while (state != C_STOP && !timeout) {
             read(port_fd, &byte, 1);
-            printf("e: read %x\n", byte);
+            printf("ua_ e: read %x\n", byte);
             handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
+            
           }
         } while (tries <= MAX_NR_TRIES && timeout);
         
@@ -95,7 +96,7 @@ int llopen(int com, user_type type) {
       // READ SET
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
-        printf("r: read %x\n", byte);
+        printf("set_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
@@ -156,13 +157,13 @@ int llwrite(int port_fd, char *data, int size) {
       seq_num = 1-seq_num;
       return 0;
     } else {
-      /*printf("Receiver rejected frame. Resending..\n");
-      return llwrite(port_fd, data, size);*/
-      return 1;
+      printf("Receiver rejected frame. Resending..\n");
+      return llwrite(port_fd, data, size);
+      //return 1;
     }
   }
 
-  //printf("Max time-outs occurred: information frame or Receiver's confirmation was likely lost.\n");
+  printf("Max time-outs occurred: information frame or Receiver's confirmation was likely lost.\n");
   return -1;
 }
 
@@ -183,7 +184,7 @@ int llread(int port_fd, char *data) {
 
     while (state != I_STOP && !timeout) {
       read(port_fd, &byte, 1);
-      printf("e: read %x\n", byte);
+      printf("i_ e: read %x\n", byte);
       handle_information_frame_state(byte, seq_num, &state, data, &size);
 
       if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
