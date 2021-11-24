@@ -15,16 +15,16 @@ void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[4] = FRAME_FLAG;
 }
 
-information_frame create_information_frame(char control, char address, char *data, unsigned int data_size) {
+information_frame create_information_frame(char sequence_number, char *data, unsigned int data_size) {
   unsigned int base_size = INFO_FRAME_MIN_SIZE + data_size;
   char *base_frame = (char *) malloc(sizeof (char) * base_size);
   char *bytes = (char *) malloc(sizeof (char) * base_size);
   information_frame info_frame;
 
   base_frame[0] = FRAME_FLAG;
-  base_frame[1] = address;
-  base_frame[2] = control;
-  base_frame[3] = FRAME_BCC1(address, control);
+  base_frame[1] = FRAME_ADDR_EM;
+  base_frame[2] = FRAME_CTRL_INFO(sequence_number);
+  base_frame[3] = FRAME_BCC1(FRAME_ADDR_EM, FRAME_CTRL_INFO(sequence_number));
   memcpy(&base_frame[4], data, data_size);
   base_frame[4+data_size] = frame_BCC2(data, data_size);
   base_frame[5+data_size] = FRAME_FLAG;
