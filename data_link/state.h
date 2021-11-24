@@ -21,12 +21,15 @@ typedef enum {
 typedef enum {
     I_START,
     I_FLAG_RCV,
-    I_A_RCV,
-    I_C_RCV,
-    I_BCC1_OK,
+    I_INFO_A_RCV,
+    I_SET_A_RCV,
+    I_INFO_BCC1_OK,
+    I_SET_BCC1_OK,
     I_DATA,
     I_BCC2_OK,
-    I_STOP
+    I_STOP,
+    I_INFO_C_RCV,
+    I_SET_C_RCV,
 } info_state;
 
 /** @brief Checks received control byte and updates the state machine.
