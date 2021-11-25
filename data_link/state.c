@@ -95,7 +95,7 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
     break;
 
     case I_INFO_C_RCV:
-      if (byte == FRAME_ADDR_REC ^ FRAME_CTRL_INFO(s))
+      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_INFO(s))
         *state = I_INFO_BCC1_OK;
       else if (byte == FRAME_FLAG)
         *state = I_FLAG_RCV;
