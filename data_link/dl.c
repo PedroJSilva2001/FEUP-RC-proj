@@ -238,11 +238,11 @@ int llclose(int port_fd, user_type type) {
       tries = 0;
 
       create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, ctrl_frame);
+      printf("Termination of connection\n");
 
       do {
 
         write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
-        printf("Termination of connection\n");
         alarm(5);
 
         timeout = false;
