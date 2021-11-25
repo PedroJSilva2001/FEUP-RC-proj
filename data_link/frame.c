@@ -5,9 +5,9 @@
 
 #define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
 
-static unsigned int stuff_bytes(char *base, unsigned int base_size, char *info_frame_bytes);
+static unsigned int stuff_bytes(uint8_t *base, unsigned int base_size, uint8_t *info_frame_bytes);
 
-void create_control_frame(char control, char address, char *ctrl_frame) {
+void create_control_frame(uint8_t control, uint8_t address, uint8_t *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
   ctrl_frame[1] = address;
   ctrl_frame[2] = control;
@@ -15,10 +15,10 @@ void create_control_frame(char control, char address, char *ctrl_frame) {
   ctrl_frame[4] = FRAME_FLAG;
 }
 
-information_frame create_information_frame(char sequence_number, char *data, unsigned int data_size) {
+information_frame create_information_frame(uint8_t sequence_number, uint8_t *data, unsigned int data_size) {
   unsigned int base_size = INFO_FRAME_MIN_SIZE + data_size;
-  char *base_frame = (char *) malloc(sizeof (char) * base_size);
-  char *bytes = (char *) malloc(sizeof (char) * base_size);
+  uint8_t *base_frame = (uint8_t *) malloc(sizeof (uint8_t) * base_size);
+  uint8_t *bytes = (uint8_t *) malloc(sizeof (uint8_t) * base_size);
   information_frame info_frame;
 
   base_frame[0] = FRAME_FLAG;
@@ -44,9 +44,9 @@ information_frame create_information_frame(char sequence_number, char *data, uns
  *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
  *  @param length Size of the array info_frame.
  */
-static unsigned int stuff_bytes(char *base, unsigned int base_size, char *info_frame_bytes) {
+static unsigned int stuff_bytes(uint8_t *base, unsigned int base_size, uint8_t *info_frame_bytes) {
   unsigned int index = 1;
-  char byte;
+  uint8_t byte;
   unsigned int size = base_size;
 
   info_frame_bytes[0] = FRAME_FLAG;
@@ -73,8 +73,8 @@ static unsigned int stuff_bytes(char *base, unsigned int base_size, char *info_f
 }
 
 
-char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length) {
-  char *destuffed_frame = (char *) malloc(sizeof (char) * length);
+uint8_t *destuff_bytes(uint8_t *stuffed_info_frame, unsigned int length, unsigned int *real_length) {
+  uint8_t *destuffed_frame = (uint8_t *) malloc(sizeof (uint8_t) * length);
   unsigned int index = 0;
 
   *real_length = length;
@@ -93,8 +93,8 @@ char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int 
   return destuffed_frame;
 }
 
-char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
-  char BCC2 = data_packet[0];
+uint8_t frame_BCC2(uint8_t *data_packet, unsigned int data_packet_size) {
+  uint8_t BCC2 = data_packet[0];
   for (unsigned int i = 1; i < data_packet_size; i++) {
     BCC2 ^= data_packet[i];
   }
@@ -102,13 +102,13 @@ char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
 }
 
 /*int main() {
-  char packet[3] = {0x3, FRAME_FLAG, 0x2};
-  char *info_frame = (char *) malloc(sizeof (char) * 9);;
+  uint8_t packet[3] = {0x3, FRAME_FLAG, 0x2};
+  uint8_t *info_frame = (uint8_t *) malloc(sizeof (uint8_t) * 9);;
   unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 3, info_frame);
   printf("size = %d\n", size);
   
- char packet[4] = {0x3, FRAME_ESCAPE, FRAME_FLAG, 0x2};
-  char *info_frame = (char *) malloc(sizeof (char) * 10);
+ uint8_t packet[4] = {0x3, FRAME_ESCAPE, FRAME_FLAG, 0x2};
+  uint8_t *info_frame = (uint8_t *) malloc(sizeof (uint8_t) * 10);
   unsigned int size = create_information_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, packet, 4, info_frame);
     printf("size = %d\n", size);
   for (size_t i = 0; i < size; i++)
@@ -117,7 +117,7 @@ char frame_BCC2(char *data_packet, unsigned int data_packet_size) {
   }
   
   unsigned int s2;
-  char *dest = destuff_bytes(info_frame, 12, &s2);
+  uint8_t *dest = destuff_bytes(info_frame, 12, &s2);
   printf("size2 = %d\n", s2);
   for (size_t i = 0; i < s2; i++)
   {

@@ -4,17 +4,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #include "../data_link/dl.h"
 
-int send_control_packet(int fd, char *filename, unsigned long file_size, char control) {
-    char *ctrl_packet = (char *) malloc(sizeof (char) * (CTRL_PACKET_MIN_SIZE + sizeof (unsigned long)));
+int send_control_packet(int fd, char *filename, unsigned long file_size, uint8_t control) {
+    uint8_t *ctrl_packet = (uint8_t *) malloc(sizeof (uint8_t) * (CTRL_PACKET_MIN_SIZE + sizeof (unsigned long)));
     unsigned int packet_length;
-    char *size_buf = (char *) &file_size;
 
-    create_control_packet(control, PACKET_T_LENGTH, sizeof (unsigned long), size_buf, ctrl_packet, &packet_length); 
-    add_to_control_packet(PACKET_T_NAME, strlen(filename), filename, ctrl_packet, &packet_length);
 
-    if (llwrite(fd, ctrl_packet, packet_length) < 0) {
+    packet control_packet = create_control_packet(control, PACKET_T_LENGTH, file_size); 
+    add_to_control_packet(PACKET_T_NAME, strlen(filename), filename, &control_packet);
+
+    for (int i = 0; i < control_packet.size; i++) {
+        printf("ctrl_packet: %x\n", control_packet.bytes[i]);
+    }
+
+    if (llwrite(fd,  control_packet.bytes,  control_packet.size) < 0) {
         printf("Not possible to send control app packet!\n");
         return -1;
     }
@@ -22,7 +27,7 @@ int send_control_packet(int fd, char *filename, unsigned long file_size, char co
     return 0;
 }
 
-int send_data_packet(int fd, char *filename, unsigned long size) {
+int send_data_packet(int fd, uint8_t *filename, unsigned long size) {
     FILE *file;
 
     if ((file = fopen(filename, "rb")) == NULL) {
@@ -30,16 +35,16 @@ int send_data_packet(int fd, char *filename, unsigned long size) {
         return -1;
     }
 
-    char *data = (char *) malloc(sizeof(char) * PACKET_MAX_DATA_SIZE);
+    uint8_t *data = (uint8_t *) malloc(sizeof(uint8_t) * PACKET_MAX_DATA_SIZE);
     unsigned int sequence_nr = 0;
     size_t bytes_read;
 
-    char *data_packet;
+    uint8_t *data_packet;
     unsigned int packet_length;
     unsigned int size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
 
     while (size > 0) {
-        bytes_read = fread(data, sizeof(char), size_to_read, file);
+        bytes_read = fread(data, sizeof(uint8_t), size_to_read, file);
         create_data_packet(sequence_nr, data, bytes_read, data_packet, &packet_length);
 
         size -= bytes_read;
@@ -58,7 +63,7 @@ int send_data_packet(int fd, char *filename, unsigned long size) {
     return 0;
 }
 
-int send_file(int fd, char *filename, unsigned long size) {
+int send_file(int fd, uint8_t *filename, unsigned long size) {
     printf("Sending start control packets...\n");
     if (send_control_packet(fd, filename, size, PACKET_CTRL_START) < 0)
         return -1;
@@ -76,8 +81,8 @@ int send_file(int fd, char *filename, unsigned long size) {
     return 0;
 }
 
-int read_control_packet(int fd, char *filename, unsigned long *length) {
-    char *bytes = (char *) malloc(sizeof(char));
+int read_control_packet(int fd, uint8_t *filename, unsigned long *length) {
+    uint8_t *bytes = (uint8_t *) malloc(sizeof(uint8_t));
     unsigned long nr_bytes_read = llread(fd, bytes);
 
     // TODO
@@ -103,10 +108,9 @@ int read_control_packet(int fd, char *filename, unsigned long *length) {
 
     free(bytes);
     return 0;
-
 }
 
-int read_data_packets(int fd, char *filename, unsigned long size) {
+int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     FILE *file;
 
     if ((file = fopen(filename, "wb")) == NULL) {
@@ -118,8 +122,8 @@ int read_data_packets(int fd, char *filename, unsigned long size) {
     unsigned long nr_bytes_read = 0;
 
     while (nr_bytes_read < size) {
-        char *buffer;
-        char data[PACKET_MAX_DATA_SIZE];
+        uint8_t *buffer;
+        uint8_t data[PACKET_MAX_DATA_SIZE];
 
         nr_bytes_read += llread(fd, buffer);
 
@@ -135,7 +139,7 @@ int read_data_packets(int fd, char *filename, unsigned long size) {
         unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
 
         memcpy(data, &buffer[4], data_length);
-        fwrite(data, sizeof(char), data_length, file);
+        fwrite(data, sizeof(uint8_t), data_length, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;
     }
@@ -146,12 +150,14 @@ int read_data_packets(int fd, char *filename, unsigned long size) {
 
 
 int receive_file(int fd) {
-    char *filename = (char *) malloc(sizeof(char));
+    uint8_t *filename = (uint8_t *) malloc(sizeof(uint8_t));
     unsigned long size;
     
+    printf("Reading control packet...\n");
     if (read_control_packet(fd, filename, &size) < 0)
         return -1;
 
+    printf("Reading data packets...\n");
     if (read_data_packets(fd, filename, size) < 0) 
         return -1;
     

@@ -1,6 +1,8 @@
 #ifndef DATA_LINK_STATE_H
 #define DATA_LINK_STATE_H
 
+#include <stdint.h>
+
 /**
  * State machine for the control frame.
  */
@@ -39,10 +41,10 @@ typedef enum {
  *  @param address Address byte.
  *  @param state Current state of the state machine.
  */
-void handle_unnumbered_frame_state(char ctrl_byte, char control, char address, ctrl_state *state);
+void handle_unnumbered_frame_state(uint8_t ctrl_byte, uint8_t control, uint8_t address, ctrl_state *state);
 
-void handle_information_frame_state(char byte, char s, info_state *state, char *data, unsigned int *size);
+void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, uint8_t *data, unsigned int *size);
 
-void handle_supervision_frame_state(char byte, char r, ctrl_state *state);
+void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state);
 
 #endif

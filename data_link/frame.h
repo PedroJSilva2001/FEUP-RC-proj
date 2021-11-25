@@ -1,6 +1,8 @@
 #ifndef DATA_LINK_frame_H
 #define DATA_LINK_frame_H
 
+#include <stdint.h>
+
 #define FRAME_FLAG       0x7E
 #define FRAME_CTRL_SET   0x03
 #define FRAME_CTRL_DISC  0x0B
@@ -18,19 +20,18 @@
 
 
 typedef struct {
-    char *bytes;
+    uint8_t *bytes;
     unsigned int size;
 } container;
 
 typedef container information_frame;
-typedef container data_packet;
 
 /** @brief Creates control frame (S and U).
  *  @param control Control byte.
  *  @param address Address byte.
  *  @param ctrl_frame Array that will contain the created frame.
  */
-void create_control_frame(char control, char address, char *ctrl_frame);
+void create_control_frame(uint8_t control, uint8_t address, uint8_t *ctrl_frame);
 
 /** @brief Creates information frame (I).
  *  @param control Control byte.
@@ -39,10 +40,10 @@ void create_control_frame(char control, char address, char *ctrl_frame);
  *  @param data_length Length of the data array.
  *  @param info_frame Array that will contain the created frame.
  */
-information_frame create_information_frame(char sequence_number, char *data, unsigned int data_size);
+information_frame create_information_frame(uint8_t sequence_number, uint8_t *data, unsigned int data_size);
 
-char *destuff_bytes(char *stuffed_info_frame, unsigned int length, unsigned int *real_length);
+uint8_t *destuff_bytes(uint8_t *stuffed_info_frame, unsigned int length, unsigned int *real_length);
 
-char frame_BCC2(char *data_packet, unsigned int data_packet_size);
+uint8_t frame_BCC2(uint8_t *data_packet, unsigned int data_packet_size);
 
 #endif

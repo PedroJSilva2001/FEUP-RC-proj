@@ -1,6 +1,9 @@
 #ifndef APP_LAYER_packet_H
 #define APP_LAYER_packet_H
 
+#include <stdint.h>
+#include "../data_link/frame.h"
+
 /* Control Packet */
 #define PACKET_CTRL_START 0x02
 #define PACKET_CTRL_END   0x03
@@ -16,11 +19,11 @@
 #define PACKET_DATA_MIN_SIZE 4
 #define PACKET_MAX_DATA_SIZE 1024
 
+typedef container packet;
 
-void create_control_packet(char control, char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length);
+packet create_control_packet(uint8_t control, uint8_t type, unsigned long file_size);
+void add_to_control_packet(uint8_t type, unsigned int size, char *data, packet *control_packet);
 
-void create_data_packet(unsigned int sequence_nr, char* data, unsigned int size, char *data_packet, unsigned int *packet_length); 
-
-void add_to_control_packet(char type, unsigned int size, char *data, char *ctrl_packet, unsigned int *packet_length);
+void create_data_packet(unsigned int sequence_nr, uint8_t* data, unsigned int size, uint8_t *data_packet, unsigned int *packet_length); 
 
 #endif

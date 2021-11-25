@@ -20,11 +20,11 @@ static void init_timeout_handler();
 static termios oldtio;
 static int tries = 0;
 static bool timeout = false;
-static char seq_num = 0;
+static uint8_t seq_num = 0;
 
 int llopen(int com, user_type type) {
   int port_fd;
-  char serial_port[255];
+  uint8_t serial_port[255];
   sprintf(serial_port, "/dev/ttyS%d", com);
   /* Open serial port device for reading and writing and not as controlling tty
      because we don't want to get killed if linenoise sends CTRL-C. */
@@ -46,8 +46,8 @@ int llopen(int com, user_type type) {
   newtio.c_iflag = IGNPAR;
   newtio.c_oflag = 0;
   newtio.c_lflag = 0;       // Set input mode (non-canonical, no echo,...)
-  newtio.c_cc[VTIME] = 0;   // Inter-character timer unused
-  newtio.c_cc[VMIN] = 1;    // Blocking read until 1 char received 
+  newtio.c_cc[VTIME] = 0;   // Inter-uint8_tacter timer unused
+  newtio.c_cc[VMIN] = 1;    // Blocking read until 1 uint8_t received 
 
   tcflush(port_fd, TCIOFLUSH);
 
@@ -56,8 +56,8 @@ int llopen(int com, user_type type) {
     return -1;
   }
 
-  char byte = 0;
-  char frame[CTRL_FRAME_SIZE];
+  uint8_t byte = 0;
+  uint8_t frame[CTRL_FRAME_SIZE];
   ctrl_state state = C_START;
 
   switch (type) {
@@ -123,9 +123,9 @@ int llopen(int com, user_type type) {
 }
 
 
-int llwrite(int port_fd, char *data, int size) {
+int llwrite(int port_fd, uint8_t *data, int size) {
   init_timeout_handler();
-  char byte;
+  uint8_t byte;
   tries = 0;
   ctrl_state state = C_START;
   ctrl_state rec_state = C_START;
@@ -169,11 +169,11 @@ int llwrite(int port_fd, char *data, int size) {
 }
 
 
-int llread(int port_fd, char *data) { 
+int llread(int port_fd, uint8_t *data) { 
   init_timeout_handler(); 
   info_state state = I_START;
   info_state type_state = I_START;
-  char byte;
+  uint8_t byte;
   unsigned int size = 0;
   tries = 0;
   bool is_bbc2_ok = false;
@@ -207,7 +207,7 @@ int llread(int port_fd, char *data) {
   }
 
 
-  char frame[CTRL_FRAME_SIZE];
+  uint8_t frame[CTRL_FRAME_SIZE];
 
   if (type_state == I_INFO_C_RCV) {
     if (is_bbc2_ok) {
@@ -229,8 +229,8 @@ int llread(int port_fd, char *data) {
 }
 
 int llclose(int port_fd, user_type type) {
-  char byte = 0;
-  char ctrl_frame[CTRL_FRAME_SIZE];
+  uint8_t byte = 0;
+  uint8_t ctrl_frame[CTRL_FRAME_SIZE];
   bool failed_to_read = true;
   ctrl_state state = C_START;
   switch (type) {

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_state *state) {
+void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t address, ctrl_state *state) {
   switch (*state) {
     case C_START:
       printf("Cstart\n");
@@ -58,7 +58,7 @@ void handle_unnumbered_frame_state(char byte, char control, char address, ctrl_s
 }
 
 
-void handle_information_frame_state(char byte, char s, info_state *state, char *data, unsigned int *size) {
+void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, uint8_t *data, unsigned int *size) {
   switch (*state) {
     case I_START:
       if (byte == FRAME_FLAG)
@@ -124,11 +124,11 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
 
     case I_DATA:
       if (byte == FRAME_FLAG) {
-        //data = realloc(data, *size);  // this might not work (data is passed as char *)
+        //data = realloc(data, *size);  // this might not work (data is passed as uint8_t *)
 
         int real_size;
-        char *destuff_data = destuff_bytes(data, *size, &real_size);
-        char bcc2 = destuff_data[(*size)-1];
+        uint8_t *destuff_data = destuff_bytes(data, *size, &real_size);
+        uint8_t bcc2 = destuff_data[(*size)-1];
         *size = real_size - 1;        // Remove BBC2 byte
         data = realloc(data, *size); 
         data = destuff_data;
@@ -155,7 +155,7 @@ void handle_information_frame_state(char byte, char s, info_state *state, char *
   }
 }
 
-void handle_supervision_frame_state(char byte, char r, ctrl_state *state) {
+void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state) {
   switch (*state) {
     case C_START:
       if (byte == FRAME_FLAG)
@@ -165,8 +165,8 @@ void handle_supervision_frame_state(char byte, char r, ctrl_state *state) {
     case C_FLAG_RCV:
       if (byte == FRAME_ADDR_REC)
         *state = C_A_RCV;
-      else if
-        (byte == FRAME_FLAG) *state = C_FLAG_RCV;
+      else if (byte == FRAME_FLAG) 
+        *state = C_FLAG_RCV;
       else
         *state = C_START;
     break;
