@@ -30,15 +30,17 @@ void add_to_control_packet(uint8_t type, unsigned int size, char *data, packet *
     memcpy(&control_packet->bytes[old_packet_size + 2], data, size);
 }
 
-void create_data_packet(unsigned int sequence_nr, uint8_t* data, unsigned int size, uint8_t *data_packet, unsigned int *packet_length) {
+packet create_data_packet(unsigned int sequence_nr, uint8_t* data, unsigned int size) {
+    packet data_packet;
+    data_packet.size = PACKET_DATA_MIN_SIZE + size;
+    uint8_t *bytes = (uint8_t *) malloc(sizeof(uint8_t) * data_packet.size);
 
-    *packet_length = PACKET_DATA_MIN_SIZE + size;
-    data_packet = (uint8_t *) malloc(sizeof(uint8_t) * (*packet_length));
+    bytes[0] = PACKET_CTRL_DATA;
+    bytes[1] = sequence_nr % 256;
+    bytes[2] = size / 256;
+    bytes[3] = size % 256;
 
-    data_packet[0] = PACKET_CTRL_DATA;
-    data_packet[1] = sequence_nr % 256;
-    data_packet[2] = size / 256;
-    data_packet[3] = size % 256;
-
-    memcpy(&data_packet[4], data, size);
+    memcpy(&bytes[4], data, size);
+    data_packet.bytes = bytes;
+    return data_packet;
 }

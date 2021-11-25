@@ -78,7 +78,7 @@ int llopen(int com, user_type type) {
           while (state != C_STOP && !timeout) {
             read(port_fd, &byte, 1);
             printf("ua_ e: read %x\n", byte);
-            handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
+            handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
             
           }
         } while (tries <= MAX_NR_TRIES && timeout);
@@ -102,7 +102,7 @@ int llopen(int com, user_type type) {
 
       // WRITE UA
       if (state == C_STOP) {
-        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, frame); //FRAME_CTRL_UA
+        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame); //FRAME_CTRL_UA
         write(port_fd, frame, CTRL_FRAME_SIZE);
 
         printf("r(SENT) ua: write %x %x %x %x %x\n", frame[0], frame[1], frame[2], frame[3] , frame[4]);
@@ -153,7 +153,7 @@ int llwrite(int port_fd, uint8_t *data, int size) {
   
   alarm(0);
 
-  printf("current_state: %d\n", state);
+  printf("current_state: %d\n", rec_state);
   if (state == C_STOP) {
     if (rec_state == C_RR_RCV) {
       seq_num = 1-seq_num;
@@ -187,6 +187,7 @@ int llread(int port_fd, uint8_t *data) {
     while (state != I_STOP && !timeout) {
       read(port_fd, &byte, 1);
       printf("i_ e: read %x\n", byte);
+      printf("********estado: %d\n", state);
       handle_information_frame_state(byte, seq_num, &state, data, &size);
 
       if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
@@ -197,8 +198,7 @@ int llread(int port_fd, uint8_t *data) {
       }
     }
   } while (tries <= MAX_NR_TRIES && timeout);
-        
-  printf("199:state_rec: %d\n",  state);      
+             
   alarm(0);
 
   printf("state_rec: %d\n",  state);
@@ -212,18 +212,18 @@ int llread(int port_fd, uint8_t *data) {
   if (type_state == I_INFO_C_RCV) {
     if (is_bbc2_ok) {
       printf("bcc2 fixe\n");
-      create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_REC, frame);
+      create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
       return size - INFO_FRAME_MIN_SIZE;
     }
       printf("bcc2 not fixe\n");
 
-    create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_REC, frame);
+    create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
     write(port_fd, frame, CTRL_FRAME_SIZE); 
     return -2;
   }
-  create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, frame);
+  create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
   write(port_fd, frame, CTRL_FRAME_SIZE);
   return -3;
 }
@@ -270,7 +270,7 @@ int llclose(int port_fd, user_type type) {
         return -1;
       }
 
-      create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, ctrl_frame);
+      create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, ctrl_frame);
       write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
       printf("Disconnected\n");
     } break;
@@ -298,7 +298,7 @@ int llclose(int port_fd, user_type type) {
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
         printf("ua_ r: read %x\n", byte);
-        handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
+        handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
       }
 
       if (state != C_STOP) {

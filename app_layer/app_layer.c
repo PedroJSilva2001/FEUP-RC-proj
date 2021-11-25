@@ -9,15 +9,9 @@
 
 int send_control_packet(int fd, char *filename, unsigned long file_size, uint8_t control) {
     uint8_t *ctrl_packet = (uint8_t *) malloc(sizeof (uint8_t) * (CTRL_PACKET_MIN_SIZE + sizeof (unsigned long)));
-    unsigned int packet_length;
-
 
     packet control_packet = create_control_packet(control, PACKET_T_LENGTH, file_size); 
     add_to_control_packet(PACKET_T_NAME, strlen(filename), filename, &control_packet);
-
-    for (int i = 0; i < control_packet.size; i++) {
-        printf("ctrl_packet: %x\n", control_packet.bytes[i]);
-    }
 
     if (llwrite(fd,  control_packet.bytes,  control_packet.size) < 0) {
         printf("Not possible to send control app packet!\n");
@@ -45,12 +39,12 @@ int send_data_packet(int fd, uint8_t *filename, unsigned long size) {
 
     while (size > 0) {
         bytes_read = fread(data, sizeof(uint8_t), size_to_read, file);
-        create_data_packet(sequence_nr, data, bytes_read, data_packet, &packet_length);
+        packet data_packet = create_data_packet(sequence_nr, data, bytes_read);
 
         size -= bytes_read;
         size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
 
-        if (llwrite(fd, data_packet, packet_length) < 0) {
+        if (llwrite(fd, data_packet.bytes, data_packet.size) < 0) {
             printf("Not possible to send data app packet!\n");
             return -1;
         }
@@ -157,6 +151,8 @@ int receive_file(int fd) {
     if (read_control_packet(fd, filename, &size) < 0)
         return -1;
 
+    printf("filename= %s\n", filename);
+    printf("size file= %ld\n", size);
     printf("Reading data packets...\n");
     if (read_data_packets(fd, filename, size) < 0) 
         return -1;

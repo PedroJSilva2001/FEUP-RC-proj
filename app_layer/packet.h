@@ -24,6 +24,6 @@ typedef container packet;
 packet create_control_packet(uint8_t control, uint8_t type, unsigned long file_size);
 void add_to_control_packet(uint8_t type, unsigned int size, char *data, packet *control_packet);
 
-void create_data_packet(unsigned int sequence_nr, uint8_t* data, unsigned int size, uint8_t *data_packet, unsigned int *packet_length); 
+packet create_data_packet(unsigned int sequence_nr, uint8_t* data, unsigned int size); 
 
 #endif

@@ -6,13 +6,11 @@
 void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t address, ctrl_state *state) {
   switch (*state) {
     case C_START:
-      printf("Cstart\n");
       if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV; 
       } break;
 
     case C_FLAG_RCV:
-      printf("cflagrcv\n");
 
       if (byte == address)  {
         *state = C_A_RCV;
@@ -23,7 +21,6 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_A_RCV:
-      printf("Carcv\n");
 
       if (byte == control) {
         *state = C_C_RCV;
@@ -34,7 +31,6 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_C_RCV:
-      printf("Ccrcv\n");
 
       if (byte == address ^ control) {
         *state = C_BCC_OK;
@@ -45,11 +41,9 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_BCC_OK:
-      printf("cbcc\n");
 
       if (byte == FRAME_FLAG) {
         *state = C_STOP;
-        printf("cstop\n");
 
       } else {
         *state = C_START; 
@@ -66,7 +60,7 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
     break;
 
     case I_FLAG_RCV:
-      if (byte == FRAME_ADDR_EM)   // TODO: ERRADO?
+      if (byte == FRAME_ADDR_EM)   
         *state = I_INFO_A_RCV;
       /* else if (byte == FRAME_ADDR_EM)
         *state = I_SET_A_RCV; */
@@ -163,7 +157,7 @@ void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state) 
     break;
     
     case C_FLAG_RCV:
-      if (byte == FRAME_ADDR_REC)
+      if (byte == FRAME_ADDR_EM)
         *state = C_A_RCV;
       else if (byte == FRAME_FLAG) 
         *state = C_FLAG_RCV;
