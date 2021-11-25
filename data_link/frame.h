@@ -34,16 +34,34 @@ typedef container information_frame;
 void create_control_frame(uint8_t control, uint8_t address, uint8_t *ctrl_frame);
 
 /** @brief Creates information frame (I).
- *  @param control Control byte.
- *  @param address Address byte.
+ *  @param sequence_number Sequence number.
  *  @param data Array with data to send.
- *  @param data_length Length of the data array.
- *  @param info_frame Array that will contain the created frame.
+ *  @param data_size Length of the data array.
+ *  @return Returns struct with information frame and its length.
  */
 information_frame create_information_frame(uint8_t sequence_number, uint8_t *data, unsigned int data_size);
 
+/** @brief Creates a new array of the frame using the byte stuffing tecnique.
+ *  @param base Information frame.
+ *  @param base_size Size of the original information frame.
+ *  @param info_frame_bytes Stuffed frame (after tecnique).
+ *  @return Returns size of the stuffed frame.
+ */
+static unsigned int stuff_bytes(uint8_t *base, unsigned int base_size, uint8_t *info_frame_bytes);
+
+/** @brief Creates a new array of the frame reversing the the byte stuffing tecnique.
+ *  @param stuffed_info_frame Stuffed information frame.
+ *  @param length Size of the stuffed information frame.
+ *  @param real_length Size of the destuffed frame (after destuffing tecnique).
+ *  @return Returns destuffed frame.
+ */
 uint8_t *destuff_bytes(uint8_t *stuffed_info_frame, unsigned int length, unsigned int *real_length);
 
-uint8_t frame_BCC2(uint8_t *data_packet, unsigned int data_packet_size);
+/** @brief Calculates de BCC2 of an information frame.
+ *  @param data_packet Information frame.
+ *  @param data_packet_size Size of the frame.
+ *  @return Returns the result BCC2.
+ */
+uint8_t frame_BCC2(uint8_t *data_frame, unsigned int data_frame_size);
 
 #endif

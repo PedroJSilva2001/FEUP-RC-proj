@@ -1,4 +1,5 @@
 #include "frame.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,11 +40,6 @@ information_frame create_information_frame(uint8_t sequence_number, uint8_t *dat
   return info_frame;
 }
 
-/** @brief Creates a new array of the frame using the byte stuffing tecnique.
- *  @param info_frame Information frame.
- *  @param stuffed_info_frame Stuffed Information frame (after tecnique).
- *  @param length Size of the array info_frame.
- */
 static unsigned int stuff_bytes(uint8_t *base, unsigned int base_size, uint8_t *info_frame_bytes) {
   uint8_t byte;
   unsigned int size = base_size;
@@ -91,10 +87,10 @@ uint8_t *destuff_bytes(uint8_t *stuffed_info_frame, unsigned int length, unsigne
   return destuffed_frame;
 }
 
-uint8_t frame_BCC2(uint8_t *data_packet, unsigned int data_packet_size) {
-  uint8_t BCC2 = data_packet[0];
-  for (unsigned int i = 1; i < data_packet_size; i++) {
-    BCC2 ^= data_packet[i];
+uint8_t frame_BCC2(uint8_t *data_frame, unsigned int data_frame_size) {
+  uint8_t BCC2 = data_frame[0];
+  for (unsigned int i = 1; i < data_frame_size; i++) {
+    BCC2 ^= data_frame[i];
   }
   return BCC2;
 }

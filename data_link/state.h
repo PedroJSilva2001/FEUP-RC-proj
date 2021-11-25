@@ -35,7 +35,7 @@ typedef enum {
     I_SET_C_RCV,
 } info_state;
 
-/** @brief Checks received control byte and updates the state machine.
+/** @brief Checks received unnumbered frame (SET, UA and DISC) byte and updates the state machine.
  *  @param ctrl_byte Byte to check.
  *  @param control Control byte.
  *  @param address Address byte.
@@ -43,8 +43,18 @@ typedef enum {
  */
 void handle_unnumbered_frame_state(uint8_t ctrl_byte, uint8_t control, uint8_t address, ctrl_state *state);
 
+/** @brief Checks received information frame byte and updates the state machine.
+ *  @param byte Byte to check.
+ *  @param s Sequence number.
+ *  @param state Current state of the state machine.
+ */
 void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state);
 
+/** @brief Checks received supervision frame (RR and REJ) byte and updates the state machine.
+ *  @param byte Byte to check.
+ *  @param r Sequence number.
+ *  @param state Current state of the state machine.
+ */
 void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state);
 
 #endif
