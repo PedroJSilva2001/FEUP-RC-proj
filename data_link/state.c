@@ -11,7 +11,6 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_FLAG_RCV:
-
       if (byte == address)  {
         *state = C_A_RCV;
       } else if (byte == FRAME_FLAG) {
@@ -21,7 +20,6 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_A_RCV:
-
       if (byte == control) {
         *state = C_C_RCV;
       } else if (byte == FRAME_FLAG) {
@@ -31,7 +29,6 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_C_RCV:
-
       if (byte == address ^ control) {
         *state = C_BCC_OK;
       } else if (byte == FRAME_FLAG) {
@@ -41,16 +38,13 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
       } break;
 
     case C_BCC_OK:
-
       if (byte == FRAME_FLAG) {
         *state = C_STOP;
-
       } else {
         *state = C_START; 
       } break;
   }
 }
-
 
 void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, uint8_t *data, unsigned int *size) {
   switch (*state) {
@@ -114,43 +108,13 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
     break;
 
     case I_INFO_BCC1_OK:
-      printf("bcc1 ok\n");
       *state = I_DATA;
-      break;
+    break;
 
     case I_DATA:
-      /* if (byte == FRAME_FLAG) {
-        //data = realloc(data, *size);  // this might not work (data is passed as uint8_t *)
-
-        int real_size;
-        uint8_t *destuff_data = destuff_bytes(*data, *size, &real_size);
-
-        printf("after destuff\n");
-
-
-        uint8_t bcc2 = destuff_data[(*size)-1];
-        *size = real_size - 1;        // Remove BBC2 byte
-        printf("before realloc\n");
-        *data = realloc(*data, *size); 
-        printf("after realloc\n");
-        *data = destuff_data;
-
-        if (bcc2 == frame_BCC2(*data, *size))
-          *state = I_BCC2_OK;
-        else
-          *state = I_BBC2_NOT_OK;
-      }
-      else {
-        printf("size before realloc= %d\n", *size);
-        *data = realloc(*data, ++(*size));
-        printf("size after realloc= %d\n", *size);
-        *data[(*size)-1] = byte;
-        printf("data= %x\n", *data[(*size)-1]);
-      } */
     break;
 
     case I_BBC2_NOT_OK:
-    
     case I_BCC2_OK:
         if (byte == FRAME_FLAG)
           *state = I_STOP;

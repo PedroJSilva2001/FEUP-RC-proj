@@ -67,7 +67,6 @@ int llopen(int com, user_type type) {
         init_timeout_handler();
 
         do {
-          printf("try nº: %d\n", tries);
           // WRITE SET
           write(port_fd, frame, CTRL_FRAME_SIZE);
 
@@ -102,7 +101,7 @@ int llopen(int com, user_type type) {
 
       // WRITE UA
       if (state == C_STOP) {
-        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame); //FRAME_CTRL_UA
+        create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
         write(port_fd, frame, CTRL_FRAME_SIZE);
 
         printf("r(SENT) ua: write %x %x %x %x %x\n", frame[0], frame[1], frame[2], frame[3] , frame[4]);
@@ -122,7 +121,6 @@ int llopen(int com, user_type type) {
   return port_fd;
 }
 
-
 int llwrite(int port_fd, uint8_t *data, int size) {
   init_timeout_handler();
   uint8_t byte;
@@ -133,17 +131,14 @@ int llwrite(int port_fd, uint8_t *data, int size) {
   information_frame info_frame = create_information_frame(seq_num, data, size);
 
   do {
-    printf("try nº: %d\n", tries);
     write(port_fd, info_frame.bytes, info_frame.size); 
 
     alarm(3);
-
     timeout = false;
 
     while (state != C_STOP && !timeout) {
       read(port_fd, &byte, 1);
       handle_supervision_frame_state(byte, seq_num, &state);
-      printf("supervision_current_state: %d\n", state);
 
       if (state == C_REJ_RCV || state == C_RR_RCV) {
         rec_state = state;
@@ -154,7 +149,6 @@ int llwrite(int port_fd, uint8_t *data, int size) {
   
   alarm(0);
 
-  printf("current_state: %d\n", rec_state);
   if (state == C_STOP) {
     if (rec_state == C_RR_RCV) {
       seq_num = 1-seq_num;
@@ -169,7 +163,6 @@ int llwrite(int port_fd, uint8_t *data, int size) {
   return -1;
 }
 
-
 int llread(int port_fd, uint8_t *data) { 
   init_timeout_handler(); 
   info_state state = I_START;
@@ -180,17 +173,14 @@ int llread(int port_fd, uint8_t *data) {
   bool is_bbc2_ok = false;
 
   do {
-    printf("try nº: %d\n", tries);
     alarm(3);
-    
     timeout = false;
 
     while (state != I_STOP && !timeout) {
       read(port_fd, &byte, 1);
-      printf("i_ e: read %x\n", byte);
-      printf("********estado: %d\n", state);
       handle_information_frame_state(byte, seq_num, &state, data, &size);
 
+      // Accumulate data bytes
       if (state == I_DATA) {
         if (byte == FRAME_FLAG) {
           int real_size;
@@ -209,10 +199,8 @@ int llread(int port_fd, uint8_t *data) {
         else {
           data = realloc(data, ++(size));
           data[(size)-1] = byte;
-          printf("data= %x\n", data[(size)-1]);
         }
       }
-    
 
       if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
         type_state = state;
@@ -225,27 +213,19 @@ int llread(int port_fd, uint8_t *data) {
              
   alarm(0);
 
-  printf("state_rec: %d\n",  state);
   if (state != I_STOP) {
     return -1;
-  }
-
-  for (int i = 0; i < size; i++) {
-
-    printf("data_llread : %x\n", data[i]);
   }
 
   uint8_t frame[CTRL_FRAME_SIZE];
 
   if (type_state == I_INFO_C_RCV) {
     if (is_bbc2_ok) {
-      printf("bcc2 fixe\n");
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
       return size;
     }
-      printf("bcc2 not fixe\n");
 
     create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
     write(port_fd, frame, CTRL_FRAME_SIZE); 
@@ -268,17 +248,15 @@ int llclose(int port_fd, user_type type) {
       create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, ctrl_frame);
 
       do {
-        printf("nr try: %d\n", tries);
+
         write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
         printf("Termination of connection\n");
         alarm(5);
 
-        
         timeout = false;
 
         while (state != C_STOP && !timeout) {
           read(port_fd, &byte, 1);
-          printf("disc_ e: read %x\n", byte);
           handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
         }
 
@@ -294,14 +272,13 @@ int llclose(int port_fd, user_type type) {
       create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, ctrl_frame);
       write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
       printf("Disconnected\n");
-      break;}
+      break;
+    }
 
     case RECEIVER: {
       // READ DISC
-
       while (state != C_STOP){
         read(port_fd, &byte, 1);
-        printf("disc_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
@@ -319,7 +296,6 @@ int llclose(int port_fd, user_type type) {
 
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
-        printf("ua_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
       }
 
@@ -327,11 +303,8 @@ int llclose(int port_fd, user_type type) {
         printf("Failed: no UA received\n");
         return -1;
       }
-
       printf("Disconnected\n");
-      
-     
-    break;
+      break;
     }
   }
 
@@ -342,7 +315,6 @@ int llclose(int port_fd, user_type type) {
   }
 
   close(port_fd);
-
   return 0;
 }
 

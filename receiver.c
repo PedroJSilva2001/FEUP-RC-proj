@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     return LLOPEN_ERR;
   }
   
+  // Receive file
   if (receive_file(port_fd) < 0) {
     printf("Error in receiving file!\n");
   }
