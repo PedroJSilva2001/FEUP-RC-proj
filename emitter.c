@@ -32,8 +32,7 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  const char *port = &argv[1][strlen("/dev/ttyS")];
-  if (port_fd = llopen(atoi(port), EMITTER) ,
+  if (port_fd = llopen(argv[1], EMITTER) ,
       port_fd == -1) {
     printf("Serial port connection was not established correctly");
     return 1;

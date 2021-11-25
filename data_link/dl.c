@@ -22,10 +22,9 @@ static int tries = 0;
 static bool timeout = false;
 static uint8_t seq_num = 0;
 
-int llopen(int com, user_type type) {
+int llopen(uint8_t serial_port[], user_type type) {
   int port_fd;
-  uint8_t serial_port[255];
-  sprintf(serial_port, "/dev/ttyS%d", com);
+
   /* Open serial port device for reading and writing and not as controlling tty
      because we don't want to get killed if linenoise sends CTRL-C. */
   if (port_fd = open(serial_port, O_RDWR | O_NOCTTY), 

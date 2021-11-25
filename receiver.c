@@ -30,8 +30,7 @@ int main(int argc, char** argv) {
   }
 
   int port_fd;
-  const char *port = &argv[1][strlen("/dev/ttyS")];
-  if (port_fd = llopen(atoi(port), RECEIVER),
+  if (port_fd = llopen(argv[1], RECEIVER),
       port_fd == -1) {
     perror("Serial port connection not successful");
     return LLOPEN_ERR;
