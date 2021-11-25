@@ -143,6 +143,7 @@ int llwrite(int port_fd, uint8_t *data, int size) {
     while (state != C_STOP && !timeout) {
       read(port_fd, &byte, 1);
       handle_supervision_frame_state(byte, seq_num, &state);
+      printf("supervision_current_state: %d\n", state);
 
       if (state == C_REJ_RCV || state == C_RR_RCV) {
         rec_state = state;
@@ -190,6 +191,38 @@ int llread(int port_fd, uint8_t *data) {
       printf("********estado: %d\n", state);
       handle_information_frame_state(byte, seq_num, &state, data, &size);
 
+      if (state == I_DATA) {
+        if (byte == FRAME_FLAG) {
+          //data = realloc(data, *size);  // this might not work (data is passed as uint8_t *)
+
+          int real_size;
+          uint8_t *destuff_data = destuff_bytes(data, size, &real_size);
+
+          printf("after destuff\n");
+
+
+          uint8_t bcc2 = destuff_data[(size)-1];
+          size = real_size - 1;        // Remove BBC2 byte
+          printf("before realloc\n");
+          data = realloc(data, size); 
+          printf("after realloc\n");
+          data = destuff_data;
+
+          if (bcc2 == frame_BCC2(data, size))
+            state = I_BCC2_OK;
+          else
+            state = I_BBC2_NOT_OK;
+        }
+        else {
+          printf("size before realloc= %d\n", size);
+          data = realloc(data, ++(size));
+          printf("size after realloc= %d\n", size);
+          data[(size)-1] = byte;
+          printf("data= %x\n", data[(size)-1]);
+        }
+      }
+    
+
       if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
         type_state = state;
       }
@@ -206,6 +239,10 @@ int llread(int port_fd, uint8_t *data) {
     return -1;
   }
 
+  for (int i = 0; i < size; i++) {
+
+    printf("data_llread : %x\n", data[i]);
+  }
 
   uint8_t frame[CTRL_FRAME_SIZE];
 
@@ -215,7 +252,7 @@ int llread(int port_fd, uint8_t *data) {
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
-      return size - INFO_FRAME_MIN_SIZE;
+      return size;
     }
       printf("bcc2 not fixe\n");
 

@@ -114,28 +114,38 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
     break;
 
     case I_INFO_BCC1_OK:
+      printf("bcc1 ok\n");
       *state = I_DATA;
 
     case I_DATA:
-      if (byte == FRAME_FLAG) {
+      /* if (byte == FRAME_FLAG) {
         //data = realloc(data, *size);  // this might not work (data is passed as uint8_t *)
 
         int real_size;
-        uint8_t *destuff_data = destuff_bytes(data, *size, &real_size);
+        uint8_t *destuff_data = destuff_bytes(*data, *size, &real_size);
+
+        printf("after destuff\n");
+
+
         uint8_t bcc2 = destuff_data[(*size)-1];
         *size = real_size - 1;        // Remove BBC2 byte
-        data = realloc(data, *size); 
-        data = destuff_data;
+        printf("before realloc\n");
+        *data = realloc(*data, *size); 
+        printf("after realloc\n");
+        *data = destuff_data;
 
-        if (bcc2 == frame_BCC2(data, *size))
+        if (bcc2 == frame_BCC2(*data, *size))
           *state = I_BCC2_OK;
         else
           *state = I_BBC2_NOT_OK;
       }
       else {
-        data = realloc(data, ++(*size));
-        data[(*size)-1] = byte;
-      }
+        printf("size before realloc= %d\n", *size);
+        *data = realloc(*data, ++(*size));
+        printf("size after realloc= %d\n", *size);
+        *data[(*size)-1] = byte;
+        printf("data= %x\n", *data[(*size)-1]);
+      } */
     break;
 
     case I_BBC2_NOT_OK:

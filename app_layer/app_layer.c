@@ -13,6 +13,8 @@ int send_control_packet(int fd, char *filename, unsigned long file_size, uint8_t
     packet control_packet = create_control_packet(control, PACKET_T_LENGTH, file_size); 
     add_to_control_packet(PACKET_T_NAME, strlen(filename), filename, &control_packet);
 
+    for (int i = 0; i< control_packet.size; i++) printf("control: %x\n", control_packet.bytes[i]);
+
     if (llwrite(fd,  control_packet.bytes,  control_packet.size) < 0) {
         printf("Not possible to send control app packet!\n");
         return -1;
@@ -75,39 +77,49 @@ int send_file(int fd, uint8_t *filename, unsigned long size) {
     return 0;
 }
 
-int read_control_packet(int fd, uint8_t *filename, unsigned long *length) {
+unsigned int read_control_packet(int fd, char *filename) {
     uint8_t *bytes = (uint8_t *) malloc(sizeof(uint8_t));
-    unsigned long nr_bytes_read = llread(fd, bytes);
+    unsigned int file_size;
+    unsigned int bytes_read = llread(fd, bytes);
 
-    // TODO
-    unsigned long current_byte = 0;
+    unsigned int current_index = 1; // byte 0 = control
 
-    while (current_byte < nr_bytes_read){
-        unsigned long size = bytes[2];
+    while (current_index != bytes_read) {
+
+        char type = bytes[current_index++];
+        char length = bytes[current_index++];
+
+        switch (type) {
+            case PACKET_T_LENGTH:{
+                char file_length[length];
+                memcpy(file_length, &bytes[current_index], length);
+                file_size = *((unsigned int *) &file_length);
+                
+            break;
+            }
         
-        switch (bytes[1]) {
-            case PACKET_T_LENGTH:
-                memcpy(length, &bytes[3], size);
-                break;
+            case PACKET_T_NAME:{
+                if (length > 255){
+                    printf("Size exceeded\n");
+                    return 0;
+                }
+                filename = realloc(filename, length);
+                strncpy(filename, &bytes[current_index], length);
 
-            case PACKET_T_NAME: 
-                filename = realloc(filename, size);
-                memcpy(filename, &bytes[3], size);
-                break;
+            break;}
         }
 
-        current_byte++;
+        current_index += length;
     }
-
-
+    
     free(bytes);
-    return 0;
+    return file_size;
 }
 
 int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     FILE *file;
 
-    if ((file = fopen(filename, "wb")) == NULL) {
+    if ((file = fopen("new", "wb")) == NULL) {
         printf("Not possible to create file!\n");
         return -1;
     }
@@ -116,7 +128,7 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     unsigned long nr_bytes_read = 0;
 
     while (nr_bytes_read < size) {
-        uint8_t *buffer;
+        uint8_t *buffer = (uint8_t *) malloc(sizeof(uint8_t));
         uint8_t data[PACKET_MAX_DATA_SIZE];
 
         nr_bytes_read += llread(fd, buffer);
@@ -144,19 +156,16 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
 
 
 int receive_file(int fd) {
-    uint8_t *filename = (uint8_t *) malloc(sizeof(uint8_t));
-    unsigned long size;
     
     printf("Reading control packet...\n");
-    if (read_control_packet(fd, filename, &size) < 0)
-        return -1;
+    uint8_t *filename = (uint8_t *) malloc(sizeof(uint8_t));
+    unsigned int size = read_control_packet(fd, filename) ;
 
     printf("filename= %s\n", filename);
-    printf("size file= %ld\n", size);
+    printf("size file= %d\n", size);
     printf("Reading data packets...\n");
     if (read_data_packets(fd, filename, size) < 0) 
         return -1;
     
-    free(filename);
     return 0;
 }
