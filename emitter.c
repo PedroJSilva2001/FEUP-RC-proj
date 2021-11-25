@@ -31,13 +31,6 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  int port_fd;
-  if (port_fd = llopen(argv[1], EMITTER) ,
-      port_fd == -1) {
-    printf("Serial port connection was not established correctly");
-    return 1;
-  }
-
   // Discover file size
   FILE *file = fopen(argv[2], "r");
   if (file == NULL) {
@@ -56,6 +49,13 @@ int main(int argc, char** argv) {
     return -1;
   }
   fclose(file);
+
+  int port_fd;
+  if (port_fd = llopen(argv[1], EMITTER) ,
+      port_fd == -1) {
+    printf("Serial port connection was not established correctly");
+    return 1;
+  }
 
   // Send file
   if (send_file(port_fd, argv[2], file_size) < 0) {
