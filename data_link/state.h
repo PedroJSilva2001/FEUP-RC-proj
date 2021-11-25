@@ -23,7 +23,7 @@ typedef enum {
 typedef enum {
     I_START,
     I_FLAG_RCV,
-    I_INFO_A_RCV,
+    I_A_RCV,
     I_SET_A_RCV,
     I_INFO_BCC1_OK,
     I_SET_BCC1_OK,
@@ -43,7 +43,7 @@ typedef enum {
  */
 void handle_unnumbered_frame_state(uint8_t ctrl_byte, uint8_t control, uint8_t address, ctrl_state *state);
 
-void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, uint8_t *data, unsigned int *size);
+void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state);
 
 void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state);
 

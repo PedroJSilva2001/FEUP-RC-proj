@@ -46,7 +46,7 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
   }
 }
 
-void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, uint8_t *data, unsigned int *size) {
+void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) {
   switch (*state) {
     case I_START:
       if (byte == FRAME_FLAG)
@@ -55,26 +55,17 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
 
     case I_FLAG_RCV:
       if (byte == FRAME_ADDR_EM)   
-        *state = I_INFO_A_RCV;
-      /* else if (byte == FRAME_ADDR_EM)
-        *state = I_SET_A_RCV; */
+        *state = I_A_RCV;
       else if (byte == FRAME_FLAG)
         *state = I_FLAG_RCV;
       else
         *state = I_START;
     break;
 
-    case I_INFO_A_RCV:
+    case I_A_RCV:
       if (byte == FRAME_CTRL_INFO(s))
         *state = I_INFO_C_RCV;
-      else if (byte == FRAME_FLAG)
-        *state = I_FLAG_RCV;
-      else
-        *state = I_START;
-    break;
-
-    case I_SET_A_RCV:
-      if (byte == FRAME_CTRL_SET)
+      else if (byte == FRAME_CTRL_SET)
         *state = I_SET_C_RCV;
       else if (byte == FRAME_FLAG)
         *state = I_FLAG_RCV;

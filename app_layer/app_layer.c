@@ -125,8 +125,12 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     while (nr_bytes_read < size) {
         uint8_t *buffer = (uint8_t *) malloc(sizeof(uint8_t));
         uint8_t data[PACKET_MAX_DATA_SIZE];
+        
+        int temp = llread(fd, buffer);
+        if (temp == -1)
+            return -1;
+        nr_bytes_read += temp;
 
-        nr_bytes_read += llread(fd, buffer);
         unsigned int seq = buffer[1];
 
         if (limit_to_repeated_packets > 0 && seq < current_sequence_nr) {

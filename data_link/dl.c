@@ -76,9 +76,7 @@ int llopen(int com, user_type type) {
           // READ UA
           while (state != C_STOP && !timeout) {
             read(port_fd, &byte, 1);
-            printf("ua_ e: read %x\n", byte);
             handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
-            
           }
         } while (tries <= MAX_NR_TRIES && timeout);
         
@@ -95,7 +93,6 @@ int llopen(int com, user_type type) {
       // READ SET
       while (state != C_STOP) {
         read(port_fd, &byte, 1);
-        printf("set_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
@@ -103,13 +100,7 @@ int llopen(int com, user_type type) {
       if (state == C_STOP) {
         create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
         write(port_fd, frame, CTRL_FRAME_SIZE);
-
-        printf("r(SENT) ua: write %x %x %x %x %x\n", frame[0], frame[1], frame[2], frame[3] , frame[4]);
         
-        // TODO: 
-        // O RECEIVER ESTÁ NO ESTADO DISC, RECEBE SET E ENVIA UA E VAI PARA O ESTADO RECEIVE_DATA
-        // DEPOIS: PODE RECEBER 2 COISAS: O SET OU TRAMA INFORMAÇÃO
-        // SE RECEBER O SET, ENVIA DE NOVO O UA
       } else {
         printf("\n");
         return -1;
@@ -178,7 +169,7 @@ int llread(int port_fd, uint8_t *data) {
 
     while (state != I_STOP && !timeout) {
       read(port_fd, &byte, 1);
-      handle_information_frame_state(byte, seq_num, &state, data, &size);
+      handle_information_frame_state(byte, seq_num, &state);
 
       // Accumulate data bytes
       if (state == I_DATA) {
@@ -227,13 +218,15 @@ int llread(int port_fd, uint8_t *data) {
       return size;
     }
 
+    // Reject frame
     create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
     write(port_fd, frame, CTRL_FRAME_SIZE); 
-    return -2;
+    return llread(port_fd, data);
   }
+  // If received another SET
   create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
   write(port_fd, frame, CTRL_FRAME_SIZE);
-  return -3;
+  return llread(port_fd, data);
 }
 
 int llclose(int port_fd, user_type type) { 
