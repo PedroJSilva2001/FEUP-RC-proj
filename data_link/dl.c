@@ -193,20 +193,13 @@ int llread(int port_fd, uint8_t *data) {
 
       if (state == I_DATA) {
         if (byte == FRAME_FLAG) {
-          //data = realloc(data, *size);  // this might not work (data is passed as uint8_t *)
-
           int real_size;
           uint8_t *destuff_data = destuff_bytes(data, size, &real_size);
-
-          printf("after destuff\n");
-
-
-          uint8_t bcc2 = destuff_data[(size)-1];
+          uint8_t bcc2 = destuff_data[(real_size)-1];
           size = real_size - 1;        // Remove BBC2 byte
-          printf("before realloc\n");
           data = realloc(data, size); 
-          printf("after realloc\n");
-          data = destuff_data;
+          
+          for (int i = 0; i < size; i++) data[i] = destuff_data[i];
 
           if (bcc2 == frame_BCC2(data, size))
             state = I_BCC2_OK;
@@ -214,9 +207,7 @@ int llread(int port_fd, uint8_t *data) {
             state = I_BBC2_NOT_OK;
         }
         else {
-          printf("size before realloc= %d\n", size);
           data = realloc(data, ++(size));
-          printf("size after realloc= %d\n", size);
           data[(size)-1] = byte;
           printf("data= %x\n", data[(size)-1]);
         }
@@ -265,42 +256,35 @@ int llread(int port_fd, uint8_t *data) {
   return -3;
 }
 
-int llclose(int port_fd, user_type type) {
+int llclose(int port_fd, user_type type) { 
+  init_timeout_handler();
   uint8_t byte = 0;
   uint8_t ctrl_frame[CTRL_FRAME_SIZE];
-  bool failed_to_read = true;
   ctrl_state state = C_START;
   switch (type) {
     case EMITTER: {
-      int tries = 0;
+      tries = 0;
 
       create_control_frame(FRAME_CTRL_DISC, FRAME_ADDR_EM, ctrl_frame);
 
-      //signal(SIGALRM, signal_handler); 
-
-      while (tries <= MAX_NR_TRIES && failed_to_read) {
-        tries++;
+      do {
         printf("nr try: %d\n", tries);
-
-        int n = write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
+        write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
         printf("Termination of connection\n");
+        alarm(5);
 
-        alarm(3);
-        failed_to_read = true;
-        state = C_START;
+        
+        timeout = false;
 
-        while (state != C_STOP && failed_to_read) {
+        while (state != C_STOP && !timeout) {
           read(port_fd, &byte, 1);
           printf("disc_ e: read %x\n", byte);
           handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
         }
 
-        if (state == C_STOP) {
-          failed_to_read = false;
-          printf("DISC received on time\n");
-        }
+      } while (tries <= MAX_NR_TRIES && timeout);
 
-      } while (tries <= MAX_NR_TRIES && failed_to_read);
+      alarm(0);
 
       if (state != C_STOP) {
         printf("Failed: timeout");
@@ -310,11 +294,12 @@ int llclose(int port_fd, user_type type) {
       create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_REC, ctrl_frame);
       write(port_fd, ctrl_frame, CTRL_FRAME_SIZE);
       printf("Disconnected\n");
-    } break;
+      break;}
 
     case RECEIVER: {
       // READ DISC
-      while (state != C_STOP) {
+
+      while (state != C_STOP){
         read(port_fd, &byte, 1);
         printf("disc_ r: read %x\n", byte);
         handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
@@ -345,8 +330,9 @@ int llclose(int port_fd, user_type type) {
 
       printf("Disconnected\n");
       
-    } 
+     
     break;
+    }
   }
 
   sleep(2);

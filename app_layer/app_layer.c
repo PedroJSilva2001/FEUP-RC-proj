@@ -157,15 +157,21 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
 
 int receive_file(int fd) {
     
-    printf("Reading control packet...\n");
+    printf("Reading start control packet...\n");
     uint8_t *filename = (uint8_t *) malloc(sizeof(uint8_t));
     unsigned int size = read_control_packet(fd, filename) ;
 
     printf("filename= %s\n", filename);
     printf("size file= %d\n", size);
+
     printf("Reading data packets...\n");
     if (read_data_packets(fd, filename, size) < 0) 
         return -1;
     
+    printf("Reading end control packet...\n");
+    size = read_control_packet(fd, filename) ;
+
+
+    printf("Application end packet read\n");
     return 0;
 }

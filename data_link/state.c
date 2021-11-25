@@ -116,6 +116,7 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state, 
     case I_INFO_BCC1_OK:
       printf("bcc1 ok\n");
       *state = I_DATA;
+      break;
 
     case I_DATA:
       /* if (byte == FRAME_FLAG) {
