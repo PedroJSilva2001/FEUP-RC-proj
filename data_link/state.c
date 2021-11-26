@@ -107,11 +107,8 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) 
     break;
 
     case I_BBC2_NOT_OK:
+    break;
     case I_BCC2_OK:
-        if (byte == FRAME_FLAG)
-          *state = I_STOP;
-        else
-          *state = I_START;  
     break;
   }
 }

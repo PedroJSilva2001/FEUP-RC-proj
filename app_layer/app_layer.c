@@ -120,7 +120,7 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
 
     unsigned int current_sequence_nr = 0;
     unsigned long nr_bytes_read = 0;
-    unsigned int limit_to_repeated_packets = 3;     // Maximum number of possible repeated packets
+    unsigned int limit_to_repeated_packets = 100;     // Maximum number of possible repeated packets
 
     while (nr_bytes_read < size) {
         uint8_t *buffer = (uint8_t *) malloc(sizeof(uint8_t));
@@ -129,9 +129,8 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
         int temp = llread(fd, buffer);
         if (temp == -1)
             return -1;
-        nr_bytes_read += temp;
 
-        unsigned int seq = buffer[1];
+        unsigned int seq = (unsigned int) buffer[1];
 
         if (limit_to_repeated_packets > 0 && seq < current_sequence_nr) {
             printf("Repeated data packets! Ignored\n");
@@ -143,6 +142,7 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
             printf("Data packets not in order!\n");
             return -1;
         }
+        
 
         unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
 
@@ -150,6 +150,7 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
         fwrite(data, sizeof(uint8_t), data_length, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;
+        nr_bytes_read += temp;
     }
 
     fclose(file);

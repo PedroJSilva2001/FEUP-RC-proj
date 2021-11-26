@@ -161,13 +161,16 @@ int llread(int port_fd, uint8_t *data) {
   unsigned int size = 0;
   tries = 0;
   bool is_bbc2_ok = false;
+  
+  printf("***********\n");
 
-  do {
+  /*do {
     alarm(3);
-    timeout = false;
-
-    while (state != I_STOP && !timeout) {
+    timeout = false; */
+    
+    while (state != I_STOP /*&& !timeout*/) {
       read(port_fd, &byte, 1);
+      printf("byte llread: %x\n", byte);
       handle_information_frame_state(byte, seq_num, &state);
 
       // Accumulate data bytes
@@ -197,12 +200,15 @@ int llread(int port_fd, uint8_t *data) {
       }
       else if (state == I_BCC2_OK || state == I_BBC2_NOT_OK){
         is_bbc2_ok = (state == I_BCC2_OK) ? true : false;
+        state = I_STOP;
+
       }
     }
-  } while (tries <= MAX_NR_TRIES && timeout);
+  /*} while (tries <= MAX_NR_TRIES && timeout);
              
-  alarm(0);
+  alarm(0);*/
 
+  printf("-208:state %d\n", state);
   if (state != I_STOP) {
     return -1;
   }
@@ -210,6 +216,7 @@ int llread(int port_fd, uint8_t *data) {
   uint8_t frame[CTRL_FRAME_SIZE];
 
   if (type_state == I_INFO_C_RCV) {
+    printf("is bcc2_ok = %s", is_bbc2_ok ? "true" : "false");
     if (is_bbc2_ok) {
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
