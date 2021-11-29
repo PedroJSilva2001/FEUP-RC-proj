@@ -122,7 +122,7 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     unsigned long nr_bytes_read = 0;
 
     while (nr_bytes_read < size) {
-        uint8_t *buffer = (uint8_t *) malloc(sizeof(uint8_t));
+        uint8_t buffer[PACKET_MAX_DATA_SIZE];
         uint8_t data[PACKET_MAX_DATA_SIZE];
         
         int temp = llread(fd, buffer);
@@ -144,8 +144,9 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
         
 
         unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
-
+        printf("before memcpy\n");
         memcpy(data, &buffer[4], data_length);
+        printf("after memcpy\n");
         fwrite(data, sizeof(uint8_t), data_length, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;

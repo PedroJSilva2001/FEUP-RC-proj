@@ -141,7 +141,7 @@ int llwrite(int port_fd, uint8_t *data, int size) {
 
   if (state == C_STOP) {
     if (rec_state == C_RR_RCV) {
-      seq_num = 1-seq_num;
+      seq_num = 1 - seq_num;
       return size;
     } else {
       printf("Receiver rejected frame. Resending..\n");
@@ -159,44 +159,45 @@ int llread(int port_fd, uint8_t *data) {
   uint8_t byte;
   unsigned int size = 0;
   bool is_bbc2_ok = false;
+
+  uint8_t buffer[2100];
+  int index = 0;
   
   
   printf("***********\n");
 
     
-    while (state != I_STOP) {
-      read(port_fd, &byte, 1);
-      /* printf("byte llread: %x\n", byte); */
-      handle_information_frame_state(byte, seq_num, &state);
-      /* printf("*****************state llread: %d\n", state); */
+  while (state != I_STOP) {
+    read(port_fd, &byte, 1);
+    /* printf("byte llread: %x\n", byte); */
+    handle_information_frame_state(byte, seq_num, &state);
+    /* printf("*****************state llread: %d\n", state); */
 
-      // Accumulate data bytes
-      if (state == I_DATA) {
-        if (byte == FRAME_FLAG) {
-          int real_size;
-          uint8_t *destuff_data = destuff_bytes(data, size, &real_size);
-          uint8_t bcc2 = destuff_data[real_size - 1];
-          size = real_size - 1;        // Remove BBC2 byte
-          data = realloc(data, size); 
-          
-          for (int i = 0; i < size; i++) data[i] = destuff_data[i];
+    // Accumulate data bytes
+    if (state == I_DATA) {
+      if (byte == FRAME_FLAG) {
+        int real_size;
+        uint8_t *destuff_buf = destuff_bytes(buffer, index, &real_size);
+        uint8_t bcc2 = destuff_buf[real_size - 1];
+        size = real_size -1;
+        
+        for (int i = 0; i < size; i++) buffer[i] = destuff_buf[i];
 
-          if (bcc2 == frame_BCC2(data, size))
-            is_bbc2_ok = true;
-          else
-            is_bbc2_ok = false;
-          state = I_STOP;  
-        }
-        else {
-          data = realloc(data, ++(size));
-          data[(size)-1] = byte;
-        }
+        if (bcc2 == frame_BCC2(buffer, size))
+          is_bbc2_ok = true;
+        else
+          is_bbc2_ok = false;
+        state = I_STOP;  
       }
-
-      if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
-        type_state = state;
+      else {
+        buffer[index++] = byte;
       }
     }
+
+    if (state == I_INFO_C_RCV || state == I_SET_C_RCV) {
+      type_state = state;
+    }
+  }
 
 
   printf("-204:state %d\n", state);
@@ -212,14 +213,18 @@ int llread(int port_fd, uint8_t *data) {
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
+
+      
+      memcpy(data, &buffer, size);
+      printf("seq: llread com RR: %d\n", data[1]);
       return size;
       
     } else {
 
-    // Reject frame
-    create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
-    write(port_fd, frame, CTRL_FRAME_SIZE); 
-    return llread(port_fd, data);
+      // Reject frame
+      create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
+      write(port_fd, frame, CTRL_FRAME_SIZE); 
+      return llread(port_fd, data);
     }
   }
 
@@ -231,7 +236,6 @@ int llread(int port_fd, uint8_t *data) {
 }
 
 int llclose(int port_fd, user_type type) { 
-  init_timeout_handler();
   uint8_t byte = 0;
   uint8_t ctrl_frame[CTRL_FRAME_SIZE];
   ctrl_state state = C_START;
