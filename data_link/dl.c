@@ -76,7 +76,7 @@ int llopen(uint8_t serial_port[], user_type type) {
           timeout = false;
           // READ UA
           while (state != C_STOP && !timeout) {
-            read(port_fd, &byte, 1);
+            read(port_fd, &byte, sizeof(uint8_t));
             handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
           }
         } while (tries <= MAX_NR_TRIES && timeout);
@@ -84,7 +84,6 @@ int llopen(uint8_t serial_port[], user_type type) {
         alarm(0);
 
         if (state != C_STOP) {
-          printf("\n");
           return -1;
         }
     }
@@ -93,7 +92,7 @@ int llopen(uint8_t serial_port[], user_type type) {
     case RECEIVER: {
       // READ SET
       while (state != C_STOP) {
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
@@ -103,7 +102,6 @@ int llopen(uint8_t serial_port[], user_type type) {
         write(port_fd, frame, CTRL_FRAME_SIZE);
         
       } else {
-        printf("\n");
         return -1;
       }
     } 
@@ -128,7 +126,7 @@ int llwrite(int port_fd, uint8_t *data, int size) {
     uint8_t byte;
 
     while (state != C_STOP && !timeout) {
-      read(port_fd, &byte, 1);
+      read(port_fd, &byte, sizeof(uint8_t));
       handle_supervision_frame_state(byte, seq_num, &state);
 
       if (state == C_REJ_RCV || state == C_RR_RCV) {
@@ -165,7 +163,7 @@ int llread(int port_fd, uint8_t *data) {
   int index = 0;
   
   while (state != I_STOP) {
-    read(port_fd, &byte, 1);
+    read(port_fd, &byte, sizeof(uint8_t));
     handle_information_frame_state(byte, seq_num, &state);
 
     // Accumulate data bytes
@@ -203,20 +201,20 @@ int llread(int port_fd, uint8_t *data) {
       seq_num = 1 - seq_num;
 
       memcpy(data, &buffer, size);
-
       return size;
       
     } else {
       // Reject frame
       create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
-      write(port_fd, frame, CTRL_FRAME_SIZE); 
-      return llread(port_fd, data);
     }
   }
+  else {
+    // If received another SET
+    create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
+  }
 
-  // If received another SET
-  create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
-  write(port_fd, frame, CTRL_FRAME_SIZE);
+  // Write control frame: either REJECT FRAME or UA (in case of receiving a SET)
+  write(port_fd, frame, CTRL_FRAME_SIZE);  
   return llread(port_fd, data);
 }
 
@@ -240,7 +238,7 @@ int llclose(int port_fd, user_type type) {
         timeout = false;
 
         while (state != C_STOP && !timeout) {
-          read(port_fd, &byte, 1);
+          read(port_fd, &byte, sizeof(uint8_t));
           handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
         }
 
@@ -262,7 +260,7 @@ int llclose(int port_fd, user_type type) {
     case RECEIVER: {
       // READ DISC
       while (state != C_STOP){
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
@@ -279,7 +277,7 @@ int llclose(int port_fd, user_type type) {
       state = C_START;
 
       while (state != C_STOP) {
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
       }
 
