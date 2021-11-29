@@ -1,7 +1,6 @@
 #include "state.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 #include "frame.h"
 
 void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t address, ctrl_state *state) {

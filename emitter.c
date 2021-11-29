@@ -14,19 +14,11 @@
 #include "./app_layer/app_layer.h"
 
 #define BAUDRATE B38400
-#define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
-
-#define LLOPEN_ERR 1
-#define LLCLOSE_ERR 3
 
 int main(int argc, char** argv) {
   
-  if ((argc < 3) || 
-      ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-      (strcmp("/dev/ttyS1", argv[1])!=0)) && 
-      (strcmp("/dev/ttyS10", argv[1])!=0) &&
-      (strcmp("/dev/ttyS11", argv[1])!=0)) {
+  if (argc < 3 || strstr(argv[1], "/dev/ttyS") == NULL) {
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1 filename.jpg\n");
     exit(1);
   }
@@ -63,7 +55,7 @@ int main(int argc, char** argv) {
   }
 
   if (llclose(port_fd, EMITTER) < 0) {
-    return LLCLOSE_ERR;
+    return -1;
   }
   return 0;
 }

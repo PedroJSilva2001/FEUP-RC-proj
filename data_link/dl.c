@@ -14,6 +14,8 @@
 #define BAUDRATE B38400
 #define MAX_NR_TRIES 3
 
+#define PACKET_MAX_DATA_SIZE 1024
+
 static void timeout_handler(int sig);
 static void init_timeout_handler();
 
@@ -157,9 +159,9 @@ int llread(int port_fd, uint8_t *data) {
   info_state type_state = I_START;
   uint8_t byte;
   unsigned int size = 0;
-  bool is_bbc2_ok = false;
+  bool is_bcc2_ok = false;
 
-  uint8_t buffer[2100];
+  uint8_t buffer[PACKET_MAX_DATA_SIZE*2];
   int index = 0;
   
   while (state != I_STOP) {
@@ -170,16 +172,12 @@ int llread(int port_fd, uint8_t *data) {
     if (state == I_DATA) {
       if (byte == FRAME_FLAG) {
         int real_size;
-        uint8_t *destuff_buf = destuff_bytes(buffer, index, &real_size);
-        uint8_t bcc2 = destuff_buf[real_size - 1];
-        size = real_size -1;
+        uint8_t *destuff_buf = destuff_bytes(buffer, index, &size);
+        uint8_t bcc2 = destuff_buf[--size];
         
         for (int i = 0; i < size; i++) buffer[i] = destuff_buf[i];
 
-        if (bcc2 == frame_BCC2(buffer, size))
-          is_bbc2_ok = true;
-        else
-          is_bbc2_ok = false;
+        is_bcc2_ok = (bcc2 == frame_BCC2(buffer, size));
         state = I_STOP;  
       }
       else {
@@ -199,7 +197,7 @@ int llread(int port_fd, uint8_t *data) {
   uint8_t frame[CTRL_FRAME_SIZE];
 
   if (type_state == I_INFO_C_RCV) {
-    if (is_bbc2_ok) {
+    if (is_bcc2_ok) {
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
@@ -209,7 +207,6 @@ int llread(int port_fd, uint8_t *data) {
       return size;
       
     } else {
-
       // Reject frame
       create_control_frame(FRAME_CTRL_REJ(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
@@ -227,6 +224,7 @@ int llclose(int port_fd, user_type type) {
   uint8_t byte = 0;
   uint8_t ctrl_frame[CTRL_FRAME_SIZE];
   ctrl_state state = C_START;
+  
   switch (type) {
     case EMITTER: {
       tries = 0;
