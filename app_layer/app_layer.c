@@ -32,23 +32,23 @@ int send_data_packet(int fd, uint8_t *filename, unsigned long size) {
     uint8_t *data = (uint8_t *) malloc(sizeof(uint8_t) * PACKET_MAX_DATA_SIZE);
     unsigned int sequence_nr = 0;
     size_t bytes_read;
-
-    uint8_t *data_packet;
-    unsigned int packet_length;
     unsigned int size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
 
     while (size > 0) {
         bytes_read = fread(data, sizeof(uint8_t), size_to_read, file);
         packet data_packet = create_data_packet(sequence_nr, data, bytes_read);
 
-        size -= bytes_read;
-        size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
-
         if (llwrite(fd, data_packet.bytes, data_packet.size) < 0) {
             printf("Not possible to send data app packet!\n");
             return -1;
         }
+        
+        
+        size -= bytes_read;
+        size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
         sequence_nr++;
+
+        printf("-------------------SIZE LEFT: %ld (seq = %d)\n", size, sequence_nr);
     }
 
     free(data);
@@ -120,7 +120,6 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
 
     unsigned int current_sequence_nr = 0;
     unsigned long nr_bytes_read = 0;
-    unsigned int limit_to_repeated_packets = 100;     // Maximum number of possible repeated packets
 
     while (nr_bytes_read < size) {
         uint8_t *buffer = (uint8_t *) malloc(sizeof(uint8_t));
@@ -131,13 +130,13 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
             return -1;
 
         unsigned int seq = (unsigned int) buffer[1];
+        printf("Data_Seq: %d \t current_seq_nr: %d\n", seq, current_sequence_nr);
 
-        if (limit_to_repeated_packets > 0 && seq < current_sequence_nr) {
+        if (seq < current_sequence_nr) {
             printf("Repeated data packets! Ignored\n");
-            limit_to_repeated_packets--;
             continue;
         }
-        else if (limit_to_repeated_packets == 0|| seq > current_sequence_nr) {
+        else if (seq > current_sequence_nr) {
             fclose(file);
             printf("Data packets not in order!\n");
             return -1;
@@ -150,7 +149,9 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
         fwrite(data, sizeof(uint8_t), data_length, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;
-        nr_bytes_read += temp;
+        nr_bytes_read += data_length;
+
+        printf("-------------------SIZE LEFT: %ld\n", size - nr_bytes_read);
     }
 
     fclose(file);

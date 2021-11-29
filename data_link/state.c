@@ -66,8 +66,8 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) 
     case I_A_RCV:
       if (byte == FRAME_CTRL_INFO(s))
         *state = I_INFO_C_RCV;
-      else if (byte == FRAME_CTRL_SET)
-        *state = I_SET_C_RCV;
+/*       else if (byte == FRAME_CTRL_SET)
+        *state = I_SET_C_RCV; */
       else if (byte == FRAME_FLAG)
         *state = I_FLAG_RCV;
       else
@@ -83,7 +83,7 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) 
         *state = I_START; 
     break;
 
-    case I_SET_C_RCV:
+    /* case I_SET_C_RCV:
       if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_SET)
         *state = I_SET_BCC1_OK;
       else if (byte == FRAME_FLAG)
@@ -97,18 +97,13 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) 
         *state = I_STOP;
       else
         *state = I_START; 
-    break;
+    break; */
 
     case I_INFO_BCC1_OK:
       *state = I_DATA;
     break;
 
     case I_DATA:
-    break;
-
-    case I_BBC2_NOT_OK:
-    break;
-    case I_BCC2_OK:
     break;
   }
 }
