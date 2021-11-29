@@ -123,7 +123,6 @@ int llwrite(int port_fd, uint8_t *data, int size) {
 
     alarm(3);
     timeout = false;
-    printf("nr tries: %d\n", tries);
     uint8_t byte;
 
     while (state != C_STOP && !timeout) {
@@ -163,15 +162,9 @@ int llread(int port_fd, uint8_t *data) {
   uint8_t buffer[2100];
   int index = 0;
   
-  
-  printf("***********\n");
-
-    
   while (state != I_STOP) {
     read(port_fd, &byte, 1);
-    /* printf("byte llread: %x\n", byte); */
     handle_information_frame_state(byte, seq_num, &state);
-    /* printf("*****************state llread: %d\n", state); */
 
     // Accumulate data bytes
     if (state == I_DATA) {
@@ -199,8 +192,6 @@ int llread(int port_fd, uint8_t *data) {
     }
   }
 
-
-  printf("-204:state %d\n", state);
   if (state != I_STOP) {
     return -1;
   }
@@ -208,15 +199,13 @@ int llread(int port_fd, uint8_t *data) {
   uint8_t frame[CTRL_FRAME_SIZE];
 
   if (type_state == I_INFO_C_RCV) {
-    printf("is bcc2_ok = %s\n", is_bbc2_ok ? "true" : "false");
     if (is_bbc2_ok) {
       create_control_frame(FRAME_CTRL_RR(seq_num), FRAME_ADDR_EM, frame);
       write(port_fd, frame, CTRL_FRAME_SIZE); 
       seq_num = 1 - seq_num;
 
-      
       memcpy(data, &buffer, size);
-      printf("seq: llread com RR: %d\n", data[1]);
+
       return size;
       
     } else {
@@ -228,11 +217,10 @@ int llread(int port_fd, uint8_t *data) {
     }
   }
 
-  /* printf("Received another SET in llread\n");
   // If received another SET
   create_control_frame(FRAME_CTRL_UA, FRAME_ADDR_EM, frame);
   write(port_fd, frame, CTRL_FRAME_SIZE);
-  return llread(port_fd, data); */
+  return llread(port_fd, data);
 }
 
 int llclose(int port_fd, user_type type) { 

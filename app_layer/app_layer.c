@@ -43,12 +43,9 @@ int send_data_packet(int fd, uint8_t *filename, unsigned long size) {
             return -1;
         }
         
-        
         size -= bytes_read;
         size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
         sequence_nr++;
-
-        printf("-------------------SIZE LEFT: %ld (seq = %d)\n", size, sequence_nr);
     }
 
     free(data);
@@ -125,34 +122,27 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
         uint8_t buffer[PACKET_MAX_DATA_SIZE];
         uint8_t data[PACKET_MAX_DATA_SIZE];
         
-        int temp = llread(fd, buffer);
-        if (temp == -1)
+        if (llread(fd, buffer) == -1)
             return -1;
 
-        unsigned int seq = (unsigned int) buffer[1];
-        printf("Data_Seq: %d \t current_seq_nr: %d\n", seq, current_sequence_nr);
+        unsigned int seq_number = (unsigned int) buffer[1];
 
-        if (seq < current_sequence_nr) {
+        if (seq_number < current_sequence_nr) {
             printf("Repeated data packets! Ignored\n");
             continue;
         }
-        else if (seq > current_sequence_nr) {
+        else if (seq_number > current_sequence_nr) {
             fclose(file);
             printf("Data packets not in order!\n");
             return -1;
         }
         
-
         unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
-        printf("before memcpy\n");
         memcpy(data, &buffer[4], data_length);
-        printf("after memcpy\n");
         fwrite(data, sizeof(uint8_t), data_length, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;
         nr_bytes_read += data_length;
-
-        printf("-------------------SIZE LEFT: %ld\n", size - nr_bytes_read);
     }
 
     fclose(file);
