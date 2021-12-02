@@ -49,54 +49,54 @@ void handle_unnumbered_frame_state(uint8_t byte, uint8_t control, uint8_t addres
 void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) {
   switch (*state) {
     case I_START:
-      if (byte == FRAME_FLAG)
+      if (byte == FRAME_FLAG) {
         *state = I_FLAG_RCV;
-    break;
+      } break;
 
     case I_FLAG_RCV:
-      if (byte == FRAME_ADDR_EM)   
+      if (byte == FRAME_ADDR_EM) { 
         *state = I_A_RCV;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = I_FLAG_RCV;
-      else
+      } else {
         *state = I_START;
-    break;
+      } break;
 
     case I_A_RCV:
-      if (byte == FRAME_CTRL_INFO(s))
+      if (byte == FRAME_CTRL_INFO(s)) {
         *state = I_INFO_C_RCV;
-      else if (byte == FRAME_CTRL_SET)
+      } else if (byte == FRAME_CTRL_SET) {
         *state = I_SET_C_RCV;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = I_FLAG_RCV;
-      else
+      } else {
         *state = I_START;
-    break;
+      } break;
 
     case I_INFO_C_RCV:
-      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_INFO(s))
+      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_INFO(s)) {
         *state = I_INFO_BCC1_OK;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = I_FLAG_RCV;
-      else
+      } else {
         *state = I_START; 
-    break;
+      } break;
 
     case I_SET_C_RCV:
-      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_SET)
+      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_SET) {
         *state = I_SET_BCC1_OK;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = I_FLAG_RCV;
-      else
+      } else {
         *state = I_START; 
-    break;
+      } break;
 
     case I_SET_BCC1_OK:
-      if (byte == FRAME_FLAG)
+      if (byte == FRAME_FLAG) {
         *state = I_STOP;
-      else
+      } else {
         *state = I_START; 
-    break;
+      } break;
 
     case I_INFO_BCC1_OK:
       *state = I_DATA;
@@ -110,53 +110,53 @@ void handle_information_frame_state(uint8_t byte, uint8_t s, info_state *state) 
 void handle_supervision_frame_state(uint8_t byte, uint8_t r, ctrl_state *state) {
   switch (*state) {
     case C_START:
-      if (byte == FRAME_FLAG)
+      if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV;
-    break;
+      } break;
     
     case C_FLAG_RCV:
-      if (byte == FRAME_ADDR_EM)
+      if (byte == FRAME_ADDR_EM) {
         *state = C_A_RCV;
-      else if (byte == FRAME_FLAG) 
+      } else if (byte == FRAME_FLAG) { 
         *state = C_FLAG_RCV;
-      else
+      } else {
         *state = C_START;
-    break;
+      } break;
 
     case C_A_RCV:
-      if (byte == FRAME_CTRL_REJ(r))
+      if (byte == FRAME_CTRL_REJ(r)) {
         *state = C_REJ_RCV;
-      else if (byte == FRAME_CTRL_RR(r)) 
+      } else if (byte == FRAME_CTRL_RR(r)) {
         *state = C_RR_RCV; 
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV;
-      else
+      } else {
         *state = C_START;
-    break;
+      } break;
 
     case C_REJ_RCV:
-      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_REJ(r))
+      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_REJ(r)) {
         *state = C_BCC_OK;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV;
-      else
+      } else {
         *state = C_START; 
-    break;
+      } break;
 
     case C_RR_RCV:
-      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_RR(r))
+      if (byte == FRAME_ADDR_EM ^ FRAME_CTRL_RR(r)) {
         *state = C_BCC_OK;
-      else if (byte == FRAME_FLAG)
+      } else if (byte == FRAME_FLAG) {
         *state = C_FLAG_RCV;
-      else
+      } else {
         *state = C_START; 
-    break;
+      } break;
 
     case C_BCC_OK:
-      if (byte == FRAME_FLAG)
+      if (byte == FRAME_FLAG) {
         *state = C_STOP;
-      else
+      } else {
         *state = C_START; 
-    break;
+      } break;
   }
 }

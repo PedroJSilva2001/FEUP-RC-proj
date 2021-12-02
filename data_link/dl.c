@@ -14,8 +14,6 @@
 #define BAUDRATE B38400
 #define MAX_NR_TRIES 3
 
-#define PACKET_MAX_DATA_SIZE 1024
-
 static void timeout_handler(int sig);
 static void init_timeout_handler();
 

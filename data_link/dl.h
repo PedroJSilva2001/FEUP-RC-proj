@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define PACKET_MAX_DATA_SIZE 1024
+
 /**
  * Type of user (Receiver or Emitter).
  */

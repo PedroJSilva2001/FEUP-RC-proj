@@ -4,10 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
-
-static unsigned int stuff_bytes(uint8_t *base, unsigned int base_size, uint8_t *info_frame_bytes);
-
 void create_control_frame(uint8_t control, uint8_t address, uint8_t *ctrl_frame) {
   ctrl_frame[0] = FRAME_FLAG;
   ctrl_frame[1] = address;

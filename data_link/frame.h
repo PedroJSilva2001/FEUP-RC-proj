@@ -15,6 +15,8 @@
 #define FRAME_ESCAPE 0x7d
 #define FRAME_CTRL_INFO(s) (s==0 ? 0x00 : 0x40)
 
+#define BYTE_TRANSPARENCY(n) ((n) ^ 0x20)
+
 #define CTRL_FRAME_SIZE 5
 #define INFO_FRAME_MIN_SIZE 6
 

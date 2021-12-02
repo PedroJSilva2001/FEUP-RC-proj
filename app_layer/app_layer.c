@@ -108,7 +108,6 @@ unsigned int read_control_packet(int fd, char *filename) {
     return file_size;
 }
 
-
 int read_single_data_packet(int fd, uint8_t *data, unsigned long *size, uint8_t *seq) {
 
     int bytes_read = llread(fd, data);
@@ -122,7 +121,7 @@ int read_single_data_packet(int fd, uint8_t *data, unsigned long *size, uint8_t 
 int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     FILE *file;
 
-    if ((file = fopen("new", "wb")) == NULL) {
+    if ((file = fopen("new.gif", "wb")) == NULL) {
         printf("Not possible to create file!\n");
         return -1;
     }
@@ -135,7 +134,10 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     while (nr_bytes_read < size) {
         uint8_t data[PACKET_MAX_DATA_SIZE];
         uint8_t seq;
-        read_single_data_packet(fd, data, &bytes_read, &seq);
+        if (read_single_data_packet(fd, data, &bytes_read, &seq) < 0) {
+            printf("Error in llread: read_data_packets\n");
+            return -1;
+        }
 
         if (seq < current_sequence_nr) {
             printf("Repeated data packets! Ignored\n");
@@ -161,7 +163,7 @@ int receive_file(int fd) {
     
     printf("Reading start control packet...\n");
     uint8_t *filename = (uint8_t *) malloc(sizeof(uint8_t));
-    unsigned int size = read_control_packet(fd, filename) ;
+    unsigned int size = read_control_packet(fd, filename);
 
     printf("Filename = %s\tSize of file = %d\n", filename, size);
 
