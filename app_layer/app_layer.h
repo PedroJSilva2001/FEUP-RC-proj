@@ -38,7 +38,16 @@ int send_file(int fd, uint8_t *filename, unsigned long size);
  *  @param filename Name of the file to receive.
  *  @return Returns size of the file to receive. 0 in case size exceeded 255 bytes.
  */
-unsigned int read_control_packet(int fd, char *filename) ;
+unsigned int read_control_packet(int fd, char *filename);
+
+/** @brief Reads and parses a single data packet.
+ *  @param fd File descriptor to receive packet from.
+ *  @param data Buffer with the data in the packet.
+ *  @param size Length of the data in the packet.
+ *  @param seq Sequence number of the packet.
+ *  @return Returns number of bytes read.
+ */
+int read_single_data_packet(int fd, uint8_t *data, unsigned long *size, uint8_t *seq);
 
 /** @brief Receives and parses data packets.
  *  @param fd File descriptor to receive packet from.

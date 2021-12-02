@@ -32,19 +32,20 @@ int send_data_packet(int fd, uint8_t *filename, unsigned long size) {
     uint8_t *data = (uint8_t *) malloc(sizeof(uint8_t) * PACKET_MAX_DATA_SIZE);
     unsigned int sequence_nr = 0;
     size_t bytes_read;
+
     unsigned int size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
 
     while (size > 0) {
         bytes_read = fread(data, sizeof(uint8_t), size_to_read, file);
         packet data_packet = create_data_packet(sequence_nr, data, bytes_read);
 
+        size -= bytes_read;
+        size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
+
         if (llwrite(fd, data_packet.bytes, data_packet.size) < 0) {
             printf("Not possible to send data app packet!\n");
             return -1;
         }
-        
-        size -= bytes_read;
-        size_to_read = (size > PACKET_MAX_DATA_SIZE) ? PACKET_MAX_DATA_SIZE : size;
         sequence_nr++;
     }
 
@@ -107,6 +108,17 @@ unsigned int read_control_packet(int fd, char *filename) {
     return file_size;
 }
 
+
+int read_single_data_packet(int fd, uint8_t *data, unsigned long *size, uint8_t *seq) {
+
+    int bytes_read = llread(fd, data);
+    *size = 256 * (unsigned int) data[2] + (unsigned int) data[3];  // Length = 256 * l2 + l1;
+    *seq = data[1];
+    memcpy(data, &(data[4]), *size);
+
+    return bytes_read;
+}
+
 int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
     FILE *file;
 
@@ -117,32 +129,28 @@ int read_data_packets(int fd, uint8_t *filename, unsigned long size) {
 
     unsigned int current_sequence_nr = 0;
     unsigned long nr_bytes_read = 0;
+    unsigned long bytes_read;
+
 
     while (nr_bytes_read < size) {
-        uint8_t buffer[PACKET_MAX_DATA_SIZE];
         uint8_t data[PACKET_MAX_DATA_SIZE];
-        
-        if (llread(fd, buffer) == -1)
-            return -1;
+        uint8_t seq;
+        read_single_data_packet(fd, data, &bytes_read, &seq);
 
-        unsigned int seq_number = (unsigned int) buffer[1];
-
-        if (seq_number < current_sequence_nr) {
+        if (seq < current_sequence_nr) {
             printf("Repeated data packets! Ignored\n");
             continue;
         }
-        else if (seq_number > current_sequence_nr) {
+        else if (seq > current_sequence_nr) {
             fclose(file);
             printf("Data packets not in order!\n");
             return -1;
         }
         
-        unsigned int data_length = 256 * (unsigned int) buffer[2] + (unsigned int) buffer[3];  // Length = 256 * l2 + l1;
-        memcpy(data, &buffer[4], data_length);
-        fwrite(data, sizeof(uint8_t), data_length, file);
+        fwrite(data, sizeof(uint8_t), bytes_read, file);
 
         current_sequence_nr = (current_sequence_nr + 1) % 256;
-        nr_bytes_read += data_length;
+        nr_bytes_read += bytes_read;
     }
 
     fclose(file);
