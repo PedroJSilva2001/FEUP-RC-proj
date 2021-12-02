@@ -14,6 +14,8 @@
 #define BAUDRATE B38400
 #define MAX_NR_TRIES 3
 
+#define PACKET_MAX_DATA_SIZE 1024
+
 static void timeout_handler(int sig);
 static void init_timeout_handler();
 
@@ -74,7 +76,7 @@ int llopen(uint8_t serial_port[], user_type type) {
           timeout = false;
           // READ UA
           while (state != C_STOP && !timeout) {
-            read(port_fd, &byte, 1);
+            read(port_fd, &byte, sizeof(uint8_t));
             handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_EM, &state);
           }
         } while (tries <= MAX_NR_TRIES && timeout);
@@ -91,7 +93,7 @@ int llopen(uint8_t serial_port[], user_type type) {
     case RECEIVER: {
       // READ SET
       while (state != C_STOP) {
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_SET, FRAME_ADDR_EM, &state);
       }
 
@@ -112,7 +114,6 @@ int llopen(uint8_t serial_port[], user_type type) {
 }
 
 int llwrite(int port_fd, uint8_t *data, int size) {
-  init_timeout_handler();
   uint8_t byte;
   tries = 0;
   ctrl_state state = C_START;
@@ -127,7 +128,7 @@ int llwrite(int port_fd, uint8_t *data, int size) {
     timeout = false;
 
     while (state != C_STOP && !timeout) {
-      read(port_fd, &byte, 1);
+      read(port_fd, &byte, sizeof(uint8_t));
       handle_supervision_frame_state(byte, seq_num, &state);
 
       if (state == C_REJ_RCV || state == C_RR_RCV) {
@@ -160,7 +161,7 @@ int llread(int port_fd, uint8_t *data) {
   unsigned int size = 0;
   bool is_bcc2_ok = false;
 
-  uint8_t buffer[1024*2];
+  uint8_t buffer[2*PACKET_MAX_DATA_SIZE];
   int index = 0;
   
   while (state != I_STOP) {
@@ -220,10 +221,10 @@ int llread(int port_fd, uint8_t *data) {
 }
 
 int llclose(int port_fd, user_type type) { 
-  init_timeout_handler();
   uint8_t byte = 0;
   uint8_t ctrl_frame[CTRL_FRAME_SIZE];
   ctrl_state state = C_START;
+
   switch (type) {
     case EMITTER: {
       tries = 0;
@@ -239,7 +240,7 @@ int llclose(int port_fd, user_type type) {
         timeout = false;
 
         while (state != C_STOP && !timeout) {
-          read(port_fd, &byte, 1);
+          read(port_fd, &byte, sizeof(uint8_t));
           handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_REC, &state);
         }
 
@@ -261,7 +262,7 @@ int llclose(int port_fd, user_type type) {
     case RECEIVER: {
       // READ DISC
       while (state != C_STOP){
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_DISC, FRAME_ADDR_EM, &state);
       }
 
@@ -278,7 +279,7 @@ int llclose(int port_fd, user_type type) {
       state = C_START;
 
       while (state != C_STOP) {
-        read(port_fd, &byte, 1);
+        read(port_fd, &byte, sizeof(uint8_t));
         handle_unnumbered_frame_state(byte, FRAME_CTRL_UA, FRAME_ADDR_REC, &state);
       }
 
